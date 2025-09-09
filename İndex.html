@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identifikatsiya Tizimi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .input-focus:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .oval-frame {
+            width: 200px;
+            height: 250px;
+            border: 4px solid #10b981;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+        }
+        .oval-frame::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.7; }
+        }
+        .status-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            min-width: 250px;
+        }
+        .notification {
+            animation: slideInRight 0.3s ease-out;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .error-field {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 1px #ef4444 !important;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <!-- Status Panel -->
+    <div id="statusPanel" class="status-panel">
+        <!-- Notifications will appear here -->
+    </div>
+
+    <div class="w-full max-w-md">
+        <!-- Kirish Oynasi -->
+        <div id="loginForm" class="glass-effect rounded-2xl p-8 shadow-2xl slide-in">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Xush kelibsiz</h2>
+                <p class="text-white/80">Hisobingizga kiring</p>
+            </div>
+
+            <form class="space-y-6">
+                <div>
+                    <label class="block text-white/90 text-sm font-medium mb-2">Email yoki telefon</label>
+                    <input type="text" id="loginEmail" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" placeholder="email@example.com">
+                </div>
+                
+                <div>
+                    <label class="block text-white/90 text-sm font-medium mb-2">Parol</label>
+                    <div class="relative">
+                        <input type="password" id="loginPassword" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" placeholder="••••••••">
+                        <button type="button" onclick="togglePassword('loginPassword')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 text-indigo-600 bg-white/20 border-white/30 rounded focus:ring-white/50">
+                        <span class="ml-2 text-white/80 text-sm">Eslab qolish</span>
+                    </label>
+                    <button type="button" class="text-white/80 hover:text-white text-sm transition-colors">Parolni unutdingizmi?</button>
+                </div>
+
+                <button type="button" onclick="performLogin()" class="w-full bg-white text-indigo-600 py-3 px-4 rounded-xl font-semibold hover:bg-white/90 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    Kirish
+                </button>
+            </form>
+
+            <div class="mt-6">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-white/30"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-transparent text-white/80">yoki</span>
+                    </div>
+                </div>
+
+                <button type="button" onclick="startFaceRecognition()" id="faceLoginBtn" class="w-full mt-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-4 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    <span>Yuz orqali kirish</span>
+                </button>
+            </div>
+
+            <div class="mt-6 text-center">
+                <p class="text-white/80">Hisobingiz yo'qmi? 
+                    <button onclick="showRegister()" class="text-white font-semibold hover:underline">Ro'yxatdan o'ting</button>
+                </p>
+            </div>
+        </div>
+
+        <!-- Ro'yxatdan o'tish oynasi -->
+        <div id="registerForm" class="glass-effect rounded-2xl p-8 shadow-2xl slide-in hidden">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Ro'yxatdan o'tish</h2>
+                <p class="text-white/80">Yangi hisob yarating</p>
+            </div>
+
+            <form class="space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-white/90 text-sm font-medium mb-2">Ism</label>
+                        <input type="text" id="firstName" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" placeholder="Ismingiz">
+                    </div>
+                    <div>
+                        <label class="block text-white/90 text-sm font-medium mb-2">Familiya</label>
+                        <input type="text" id="lastName" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" placeholder="Familiyangiz">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-white/90 text-sm font-medium mb-2">Email</label>
+                    <input type="email" id="registerEmail" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" placeholder="email@example.com">
+                </div>
+
+                <div>
+                    <label class="block text-white/90 text-sm font-medium mb-2">Telefon raqam</label>
+                    <input type="tel" id="phone" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" placeholder="+998 90 123 45 67">
+                </div>
+
+                <div>
+                    <label class="block text-white/90 text-sm font-medium mb-2">Parol</label>
+                    <div class="relative">
+                        <input type="password" id="registerPassword" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" placeholder="••••••••">
+                        <button type="button" onclick="togglePassword('registerPassword')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-white/90 text-sm font-medium mb-2">Parolni tasdiqlang</label>
+                    <div class="relative">
+                        <input type="password" id="confirmPassword" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" placeholder="••••••••">
+                        <button type="button" onclick="togglePassword('confirmPassword')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-2 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" id="terms" class="w-4 h-4 text-indigo-600 bg-white/20 border-white/30 rounded focus:ring-white/50">
+                    <label for="terms" class="ml-2 text-white/80 text-sm">
+                        <span>Men </span>
+                        <button type="button" class="text-white font-semibold hover:underline">foydalanish shartlari</button>
+                        <span> va </span>
+                        <button type="button" class="text-white font-semibold hover:underline">maxfiylik siyosati</button>
+                        <span>ga roziman</span>
+                    </label>
+                </div>
+
+                <button type="button" onclick="performRegister()" class="w-full bg-white text-indigo-600 py-3 px-4 rounded-xl font-semibold hover:bg-white/90 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    Ro'yxatdan o'tish
+                </button>
+            </form>
+
+            <div class="mt-6">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-white/30"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-transparent text-white/80">yoki</span>
+                    </div>
+                </div>
+
+                <button type="button" onclick="startFaceRegistration()" id="faceRegisterBtn" class="w-full mt-4 bg-gradient-to-r from-green-500 to-teal-500 text-white py-3 px-4 rounded-xl font-semibold hover:from-green-600 hover:to-teal-600 transform hover:scale-105 transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    <span>Yuz orqali ro'yxatdan o'tish</span>
+                </button>
+            </div>
+
+            <div class="mt-6 text-center">
+                <p class="text-white/80">Hisobingiz bormi? 
+                    <button onclick="showLogin()" class="text-white font-semibold hover:underline">Kirish</button>
+                </p>
+            </div>
+        </div>
+
+        <!-- Tasdiqlash oynasi -->
+        <div id="verificationForm" class="glass-effect rounded-2xl p-8 shadow-2xl slide-in hidden">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Tasdiqlash</h2>
+                <p class="text-white/80">Telefon raqamingizga yuborilgan kodni kiriting</p>
+                <p class="text-white/60 text-sm mt-2" id="sentToNumber">+998 90 *** ** 67</p>
+            </div>
+
+            <form class="space-y-6">
+                <div>
+                    <label class="block text-white/90 text-sm font-medium mb-4 text-center">Tasdiqlash kodi</label>
+                    <div class="flex justify-center space-x-3">
+                        <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" oninput="moveToNext(this, 0)">
+                        <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" oninput="moveToNext(this, 1)">
+                        <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" oninput="moveToNext(this, 2)">
+                        <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" oninput="moveToNext(this, 3)">
+                        <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" oninput="moveToNext(this, 4)">
+                        <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" oninput="moveToNext(this, 5)">
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <p class="text-white/80 text-sm mb-4">Kod kelmadimi?</p>
+                    <button type="button" onclick="resendCode()" class="text-white font-semibold hover:underline text-sm" id="resendBtn">
+                        Qayta yuborish (<span id="countdown">60</span>s)
+                    </button>
+                </div>
+
+                <button type="button" onclick="performVerification()" class="w-full bg-white text-indigo-600 py-3 px-4 rounded-xl font-semibold hover:bg-white/90 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    Tasdiqlash
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <button onclick="showRegister()" class="text-white/80 hover:text-white text-sm transition-colors">← Orqaga qaytish</button>
+            </div>
+        </div>
+
+        <!-- Yuz ro'yxatga olish oynasi -->
+        <div id="faceRegistrationForm" class="glass-effect rounded-2xl p-8 shadow-2xl slide-in hidden">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Yuz ro'yxatga olish</h2>
+                <p class="text-white/80">Yuzingizni ro'yxatga olish uchun kameraga qarang</p>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Kamera oynasi -->
+                <div class="relative bg-black/30 rounded-2xl overflow-hidden" style="aspect-ratio: 4/3;">
+                    <video id="regVideo" class="w-full h-full object-cover hidden" autoplay muted></video>
+                    <canvas id="regCanvas" class="w-full h-full object-cover hidden"></canvas>
+                    
+                    <!-- Kamera yoqilmagan holat -->
+                    <div id="regCameraPlaceholder" class="w-full h-full flex flex-col items-center justify-center text-white/60">
+                        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-center">Yuzingizni ro'yxatga olish uchun kamerani yoqing</p>
+                    </div>
+
+                    <!-- Yuz ro'yxatga olish doirasi -->
+                    <div id="regFaceOverlay" class="absolute inset-0 flex items-center justify-center hidden">
+                        <div class="oval-frame opacity-80"></div>
+                    </div>
+
+                    <!-- Holat ko'rsatkichi -->
+                    <div id="regStatusIndicator" class="absolute top-4 left-4 right-4">
+                        <div class="bg-black/50 rounded-lg px-3 py-2 text-white text-sm text-center hidden" id="regStatusText">
+                            Yuzingizni doira ichiga joylashtiring
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tugmalar -->
+                <div class="space-y-3">
+                    <button type="button" onclick="toggleRegCamera()" id="regCameraBtn" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold transform hover:scale-105 transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>Kamerani yoqish</span>
+                    </button>
+
+                    <button type="button" onclick="captureAndRegister()" id="regCaptureBtn" class="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-3 px-4 rounded-xl font-semibold hover:from-green-600 hover:to-teal-600 transform hover:scale-105 transition-all duration-300 shadow-lg hidden flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        <span>Yuzni ro'yxatga olish</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button onclick="showRegister()" class="text-white/80 hover:text-white text-sm transition-colors">← Orqaga qaytish</button>
+            </div>
+        </div>
+
+        <!-- Yuz tanish oynasi -->
+        <div id="faceRecognitionForm" class="glass-effect rounded-2xl p-8 shadow-2xl slide-in hidden">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Yuz tanish</h2>
+                <p class="text-white/80">Ro'yxatdan o'tgan yuzingizni tanish uchun kameraga qarang</p>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Kamera oynasi -->
+                <div class="relative bg-black/30 rounded-2xl overflow-hidden" style="aspect-ratio: 4/3;">
+                    <video id="faceVideo" class="w-full h-full object-cover hidden" autoplay muted></video>
+                    <canvas id="faceCanvas" class="w-full h-full object-cover hidden"></canvas>
+                    
+                    <!-- Kamera yoqilmagan holat -->
+                    <div id="cameraPlaceholder" class="w-full h-full flex flex-col items-center justify-center text-white/60">
+                        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-center">Kamerani yoqish uchun tugmani bosing</p>
+                    </div>
+
+                    <!-- Yuz tanish doirasi -->
+                    <div id="faceOverlay" class="absolute inset-0 flex items-center justify-center hidden">
+                        <div class="oval-frame opacity-80"></div>
+                    </div>
+
+                    <!-- Holat ko'rsatkichi -->
+                    <div id="statusIndicator" class="absolute top-4 left-4 right-4">
+                        <div class="bg-black/50 rounded-lg px-3 py-2 text-white text-sm text-center hidden" id="statusText">
+                            Yuzingizni doira ichiga joylashtiring
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tugmalar -->
+                <div class="space-y-3">
+                    <button type="button" onclick="toggleCamera()" id="cameraBtn" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold transform hover:scale-105 transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>Kamerani yoqish</span>
+                    </button>
+
+                    <button type="button" onclick="captureAndRecognize()" id="captureBtn" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-4 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg hidden flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>Yuzni tanish</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button onclick="showLogin()" class="text-white/80 hover:text-white text-sm transition-colors">← Orqaga qaytish</button>
+            </div>
+        </div>
+
+        <!-- Muvaffaqiyat oynasi -->
+        <div id="successForm" class="glass-effect rounded-2xl p-8 shadow-2xl slide-in hidden">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-4">Muvaffaqiyatli!</h2>
+                <p class="text-white/80 mb-8">Hisobingiz muvaffaqiyatli yaratildi va tasdiqlandi</p>
+                
+                <button onclick="showLogin()" class="w-full bg-white text-indigo-600 py-3 px-4 rounded-xl font-semibold hover:bg-white/90 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    Hisobga kirish
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let countdownTimer;
+        let countdownSeconds = 60;
+        let cameraStream = null;
+        let isCameraActive = false;
+        let regCameraStream = null;
+        let isRegCameraActive = false;
+        let registeredUsers = []; // Ro'yxatdan o'tgan foydalanuvchilar
+        
+        // Ovoz effektlari
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(frequency, duration, type = 'success') {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            if (type === 'success') {
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+            } else if (type === 'error') {
+                oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(300, audioContext.currentTime + 0.1);
+            } else {
+                oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+            }
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+        
+        // Qurilma tekshirish
+        function isMobileDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isAndroid = userAgent.includes('android');
+            const isIOS = userAgent.includes('iphone') || userAgent.includes('ipad') || userAgent.includes('ipod');
+            return isAndroid || isIOS;
+        }
+        
+        // Bildirishnoma ko'rsatish
+        function showNotification(message, type = 'info', duration = 3000) {
+            const panel = document.getElementById('statusPanel');
+            const notification = document.createElement('div');
+            
+            let bgColor = 'bg-blue-500';
+            let icon = '🔔';
+            
+            if (type === 'success') {
+                bgColor = 'bg-green-500';
+                icon = '✅';
+                playSound(800, 0.2, 'success');
+            } else if (type === 'error') {
+                bgColor = 'bg-red-500';
+                icon = '❌';
+                playSound(400, 0.3, 'error');
+            } else if (type === 'warning') {
+                bgColor = 'bg-yellow-500';
+                icon = '⚠️';
+                playSound(600, 0.2, 'warning');
+            }
+            
+            notification.className = `notification ${bgColor} text-white p-3 rounded-lg mb-2 shadow-lg flex items-center space-x-2`;
+            notification.innerHTML = `
+                <span class="text-lg">${icon}</span>
+                <span class="text-sm">${message}</span>
+            `;
+            
+            panel.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideInRight 0.3s ease-out reverse';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, duration);
+        }
+        
+        // Maydon xatoligini ko'rsatish
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            field.classList.add('error-field');
+            showNotification(message, 'error');
+            
+            setTimeout(() => {
+                field.classList.remove('error-field');
+            }, 3000);
+        }
+
+        function showLogin() {
+            hideAllForms();
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('loginForm').classList.add('fade-in');
+        }
+
+        function showRegister() {
+            hideAllForms();
+            document.getElementById('registerForm').classList.remove('hidden');
+            document.getElementById('registerForm').classList.add('fade-in');
+        }
+
+        function showVerification() {
+            hideAllForms();
+            document.getElementById('verificationForm').classList.remove('hidden');
+            document.getElementById('verificationForm').classList.add('fade-in');
+            startCountdown();
+        }
+
+        function showFaceRegistration() {
+            hideAllForms();
+            document.getElementById('faceRegistrationForm').classList.remove('hidden');
+            document.getElementById('faceRegistrationForm').classList.add('fade-in');
+        }
+
+        function showFaceRecognition() {
+            hideAllForms();
+            document.getElementById('faceRecognitionForm').classList.remove('hidden');
+            document.getElementById('faceRecognitionForm').classList.add('fade-in');
+        }
+
+        function showSuccess() {
+            hideAllForms();
+            document.getElementById('successForm').classList.remove('hidden');
+            document.getElementById('successForm').classList.add('fade-in');
+        }
+
+        function hideAllForms() {
+            const forms = ['loginForm', 'registerForm', 'verificationForm', 'faceRegistrationForm', 'faceRecognitionForm', 'successForm'];
+            forms.forEach(formId => {
+                document.getElementById(formId).classList.add('hidden');
+                document.getElementById(formId).classList.remove('fade-in');
+            });
+            
+            // Kameralarni o'chirish
+            if (cameraStream) {
+                stopCamera();
+            }
+            if (regCameraStream) {
+                stopRegCamera();
+            }
+        }
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        function performLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                alert('Iltimos, barcha maydonlarni to\'ldiring');
+                return;
+            }
+            
+            // Demo maqsadida muvaffaqiyatli kirish
+            alert('Muvaffaqiyatli kirildi!');
+        }
+
+        function performRegister() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const terms = document.getElementById('terms').checked;
+            
+            // Har bir maydonni tekshirish
+            if (!firstName) {
+                showFieldError('firstName', 'Ism kiritilishi shart!');
+                return;
+            }
+            
+            if (!lastName) {
+                showFieldError('lastName', 'Familiya kiritilishi shart!');
+                return;
+            }
+            
+            if (!email) {
+                showFieldError('registerEmail', 'Email kiritilishi shart!');
+                return;
+            }
+            
+            // Email formatini tekshirish
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showFieldError('registerEmail', 'Email formati noto\'g\'ri!');
+                return;
+            }
+            
+            if (!phone) {
+                showFieldError('phone', 'Telefon raqam kiritilishi shart!');
+                return;
+            }
+            
+            // Telefon raqam formatini tekshirish
+            const phoneRegex = /^\+998\s\d{2}\s\d{3}\s\d{2}\s\d{2}$/;
+            if (!phoneRegex.test(phone)) {
+                showFieldError('phone', 'Telefon raqam formati: +998 90 123 45 67');
+                return;
+            }
+            
+            if (!password) {
+                showFieldError('registerPassword', 'Parol kiritilishi shart!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showFieldError('registerPassword', 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak!');
+                return;
+            }
+            
+            if (!confirmPassword) {
+                showFieldError('confirmPassword', 'Parolni tasdiqlash shart!');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showFieldError('confirmPassword', 'Parollar mos kelmaydi!');
+                return;
+            }
+            
+            if (!terms) {
+                showNotification('Foydalanish shartlarini qabul qiling!', 'error');
+                return;
+            }
+            
+            // Foydalanuvchini ro'yxatga qo'shish
+            const newUser = {
+                id: Date.now(),
+                firstName,
+                lastName,
+                email,
+                phone,
+                password,
+                registeredAt: new Date().toISOString(),
+                hasFaceData: false
+            };
+            
+            registeredUsers.push(newUser);
+            showNotification('Ma\'lumotlar saqlandi!', 'success');
+            
+            // Telefon raqamini ko'rsatish
+            const maskedPhone = phone.replace(/(\+998\s\d{2})\s\d{3}\s\d{2}\s(\d{2})/, '$1 *** ** $2');
+            document.getElementById('sentToNumber').textContent = maskedPhone;
+            
+            showVerification();
+        }
+
+        function moveToNext(current, index) {
+            if (current.value.length === 1 && index < 5) {
+                const inputs = document.querySelectorAll('#verificationForm input[type="text"]');
+                inputs[index + 1].focus();
+            }
+            
+            // Avtomatik tasdiqlash (barcha maydonlar to'ldirilganda)
+            const inputs = document.querySelectorAll('#verificationForm input[type="text"]');
+            const allFilled = Array.from(inputs).every(input => input.value.length === 1);
+            if (allFilled) {
+                setTimeout(() => {
+                    performVerification();
+                }, 500);
+            }
+        }
+
+        function performVerification() {
+            const inputs = document.querySelectorAll('#verificationForm input[type="text"]');
+            const code = Array.from(inputs).map(input => input.value).join('');
+            
+            if (code.length !== 6) {
+                alert('Iltimos, 6 xonali kodni to\'liq kiriting');
+                return;
+            }
+            
+            // Demo maqsadida har qanday kod qabul qilinadi
+            showSuccess();
+        }
+
+        function startCountdown() {
+            countdownSeconds = 60;
+            const countdownElement = document.getElementById('countdown');
+            const resendBtn = document.getElementById('resendBtn');
+            
+            resendBtn.style.pointerEvents = 'none';
+            resendBtn.style.opacity = '0.6';
+            
+            countdownTimer = setInterval(() => {
+                countdownSeconds--;
+                countdownElement.textContent = countdownSeconds;
+                
+                if (countdownSeconds <= 0) {
+                    clearInterval(countdownTimer);
+                    resendBtn.innerHTML = 'Qayta yuborish';
+                    resendBtn.style.pointerEvents = 'auto';
+                    resendBtn.style.opacity = '1';
+                }
+            }, 1000);
+        }
+
+        function resendCode() {
+            if (countdownSeconds <= 0) {
+                alert('Tasdiqlash kodi qayta yuborildi');
+                startCountdown();
+            }
+        }
+
+        // Yuz ro'yxatga olish funksiyalari
+        function startFaceRegistration() {
+            if (!isMobileDevice()) {
+                showNotification('Yuz tanish faqat Android va iOS qurilmalarda ishlaydi!', 'error');
+                return;
+            }
+            showFaceRegistration();
+        }
+
+        function startFaceRecognition() {
+            if (!isMobileDevice()) {
+                showNotification('Yuz tanish faqat Android va iOS qurilmalarda ishlaydi!', 'error');
+                return;
+            }
+            
+            // Ro'yxatdan o'tgan foydalanuvchilar borligini tekshirish
+            const usersWithFace = registeredUsers.filter(user => user.hasFaceData);
+            if (usersWithFace.length === 0) {
+                showNotification('Avval yuz orqali ro\'yxatdan o\'ting!', 'warning');
+                return;
+            }
+            showFaceRecognition();
+        }
+
+        async function toggleCamera() {
+            if (!isCameraActive) {
+                try {
+                    showNotification('Kamera yoqilmoqda...', 'info');
+                    
+                    const statusText = document.getElementById('statusText');
+                    statusText.classList.remove('hidden');
+                    statusText.textContent = 'Kamera yoqilmoqda...';
+                    statusText.classList.add('bg-blue-500/80');
+                    
+                    cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: { ideal: 640 }, 
+                            height: { ideal: 480 },
+                            facingMode: 'user'
+                        } 
+                    });
+                    
+                    const video = document.getElementById('faceVideo');
+                    video.srcObject = cameraStream;
+                    
+                    // Video yuklashini kutish
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        
+                        // UI o'zgarishlari
+                        document.getElementById('cameraPlaceholder').classList.add('hidden');
+                        document.getElementById('faceVideo').classList.remove('hidden');
+                        document.getElementById('faceOverlay').classList.remove('hidden');
+                        document.getElementById('captureBtn').classList.remove('hidden');
+                        
+                        statusText.textContent = 'Yuzingizni oval ichiga joylashtiring';
+                        statusText.classList.remove('bg-blue-500/80');
+                        statusText.classList.add('bg-black/50');
+                        
+                        const cameraBtn = document.getElementById('cameraBtn');
+                        cameraBtn.innerHTML = `
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18 21l-4.95-4.95m0 0L5.636 5.636M13.05 16.05L5.636 5.636"></path>
+                            </svg>
+                            <span>Kamerani o'chirish</span>
+                        `;
+                        cameraBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                        cameraBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+                        
+                        isCameraActive = true;
+                        showNotification('Kamera muvaffaqiyatli yoqildi!', 'success');
+                    };
+                    
+                } catch (error) {
+                    console.error('Kamera xatosi:', error);
+                    const statusText = document.getElementById('statusText');
+                    statusText.classList.remove('hidden');
+                    statusText.textContent = 'Kameraga kirish rad etildi';
+                    statusText.classList.add('bg-red-500/80');
+                    
+                    setTimeout(() => {
+                        statusText.classList.add('hidden');
+                        statusText.classList.remove('bg-red-500/80');
+                    }, 3000);
+                    
+                    showNotification('Kameraga kirish rad etildi!', 'error');
+                }
+            } else {
+                stopCamera();
+            }
+        }
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            
+            // UI qaytarish
+            document.getElementById('cameraPlaceholder').classList.remove('hidden');
+            document.getElementById('faceVideo').classList.add('hidden');
+            document.getElementById('faceOverlay').classList.add('hidden');
+            document.getElementById('statusText').classList.add('hidden');
+            document.getElementById('captureBtn').classList.add('hidden');
+            
+            const cameraBtn = document.getElementById('cameraBtn');
+            cameraBtn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                <span>Kamerani yoqish</span>
+            `;
+            cameraBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+            cameraBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            
+            isCameraActive = false;
+        }
+
+        async function toggleRegCamera() {
+            if (!isRegCameraActive) {
+                try {
+                    // Kamera ruxsatini so'rash
+                    const statusText = document.getElementById('regStatusText');
+                    statusText.classList.remove('hidden');
+                    statusText.textContent = 'Kamera yoqilmoqda...';
+                    statusText.classList.add('bg-blue-500/80');
+                    
+                    regCameraStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: { ideal: 640 }, 
+                            height: { ideal: 480 },
+                            facingMode: 'user'
+                        } 
+                    });
+                    
+                    const video = document.getElementById('regVideo');
+                    video.srcObject = regCameraStream;
+                    
+                    // Video yuklashini kutish
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        
+                        // UI o'zgarishlari
+                        document.getElementById('regCameraPlaceholder').classList.add('hidden');
+                        document.getElementById('regVideo').classList.remove('hidden');
+                        document.getElementById('regFaceOverlay').classList.remove('hidden');
+                        document.getElementById('regCaptureBtn').classList.remove('hidden');
+                        
+                        statusText.textContent = 'Yuzingizni doira ichiga joylashtiring';
+                        statusText.classList.remove('bg-blue-500/80');
+                        statusText.classList.add('bg-black/50');
+                        
+                        const cameraBtn = document.getElementById('regCameraBtn');
+                        cameraBtn.innerHTML = `
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18 21l-4.95-4.95m0 0L5.636 5.636M13.05 16.05L5.636 5.636"></path>
+                            </svg>
+                            <span>Kamerani o'chirish</span>
+                        `;
+                        cameraBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                        cameraBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+                        
+                        isRegCameraActive = true;
+                    };
+                    
+                } catch (error) {
+                    console.error('Kamera xatosi:', error);
+                    const statusText = document.getElementById('regStatusText');
+                    statusText.classList.remove('hidden');
+                    statusText.textContent = 'Kameraga kirish rad etildi yoki mavjud emas';
+                    statusText.classList.add('bg-red-500/80');
+                    
+                    setTimeout(() => {
+                        statusText.classList.add('hidden');
+                        statusText.classList.remove('bg-red-500/80');
+                    }, 3000);
+                    
+                    alert('Kameraga kirish imkoni yo\'q. Iltimos:\n1. Brauzer sozlamalarida kamera ruxsatini yoqing\n2. Kamera boshqa dastur tomonidan ishlatilmayotganini tekshiring\n3. HTTPS orqali kirganingizni tekshiring');
+                }
+            } else {
+                stopRegCamera();
+            }
+        }
+
+        function stopRegCamera() {
+            if (regCameraStream) {
+                regCameraStream.getTracks().forEach(track => track.stop());
+                regCameraStream = null;
+            }
+            
+            // UI qaytarish
+            document.getElementById('regCameraPlaceholder').classList.remove('hidden');
+            document.getElementById('regVideo').classList.add('hidden');
+            document.getElementById('regFaceOverlay').classList.add('hidden');
+            document.getElementById('regStatusText').classList.add('hidden');
+            document.getElementById('regCaptureBtn').classList.add('hidden');
+            
+            const cameraBtn = document.getElementById('regCameraBtn');
+            cameraBtn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                <span>Kamerani yoqish</span>
+            `;
+            cameraBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+            cameraBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            
+            isRegCameraActive = false;
+        }
+
+        function captureAndRegister() {
+            const video = document.getElementById('regVideo');
+            const canvas = document.getElementById('regCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Canvas o'lchamini video bilan moslashtirish
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Rasmni olish
+            ctx.drawImage(video, 0, 0);
+            
+            // Yuz ro'yxatga olish simulatsiyasi
+            const statusText = document.getElementById('regStatusText');
+            const captureBtn = document.getElementById('regCaptureBtn');
+            
+            statusText.textContent = 'Yuz ro\'yxatga olinmoqda...';
+            statusText.classList.remove('bg-black/50');
+            statusText.classList.add('bg-green-500/80');
+            
+            captureBtn.disabled = true;
+            captureBtn.classList.add('opacity-50');
+            
+            showNotification('Yuz ma\'lumotlari qayta ishlanmoqda...', 'info');
+            
+            // 2 soniya kutish (haqiqiy yuz ro'yxatga olish simulatsiyasi)
+            setTimeout(() => {
+                // Yuzni ro'yxatga qo'shish
+                const faceData = canvas.toDataURL(); // Base64 formatda yuz ma'lumoti
+                
+                // Oxirgi ro'yxatdan o'tgan foydalanuvchini topish va yuz ma'lumotlarini qo'shish
+                if (registeredUsers.length > 0) {
+                    const lastUser = registeredUsers[registeredUsers.length - 1];
+                    lastUser.faceData = faceData;
+                    lastUser.hasFaceData = true;
+                }
+                
+                statusText.textContent = 'Yuz muvaffaqiyatli ro\'yxatga olindi!';
+                statusText.classList.remove('bg-green-500/80');
+                statusText.classList.add('bg-blue-500/80');
+                
+                showNotification('Yuz muvaffaqiyatli ro\'yxatga olindi!', 'success');
+                
+                setTimeout(() => {
+                    stopRegCamera();
+                    showLogin();
+                }, 1500);
+            }, 2000);
+        }
+
+        function captureAndRecognize() {
+            const video = document.getElementById('faceVideo');
+            const canvas = document.getElementById('faceCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Canvas o'lchamini video bilan moslashtirish
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Rasmni olish
+            ctx.drawImage(video, 0, 0);
+            
+            // Yuz tanish simulatsiyasi
+            const statusText = document.getElementById('statusText');
+            const captureBtn = document.getElementById('captureBtn');
+            
+            statusText.textContent = 'Yuz tanilmoqda...';
+            statusText.classList.remove('bg-black/50');
+            statusText.classList.add('bg-blue-500/80');
+            
+            captureBtn.disabled = true;
+            captureBtn.classList.add('opacity-50');
+            
+            showNotification('Yuz tanish jarayoni boshlandi...', 'info');
+            
+            // 2 soniya kutish (haqiqiy yuz tanish simulatsiyasi)
+            setTimeout(() => {
+                // Ro'yxatdan o'tgan yuzlar bilan solishtirish
+                const usersWithFace = registeredUsers.filter(user => user.hasFaceData);
+                
+                if (usersWithFace.length > 0) {
+                    // Demo maqsadida har doim muvaffaqiyatli (haqiqiy dasturda yuzlarni solishtirish kerak)
+                    const recognizedUser = usersWithFace[0]; // Birinchi foydalanuvchini tanish
+                    
+                    statusText.textContent = 'Yuz muvaffaqiyatli tanildi!';
+                    statusText.classList.remove('bg-blue-500/80');
+                    statusText.classList.add('bg-green-500/80');
+                    
+                    showNotification(`Xush kelibsiz, ${recognizedUser.firstName}!`, 'success');
+                    
+                    setTimeout(() => {
+                        stopCamera();
+                        showNotification('Tizimga muvaffaqiyatli kirildi!', 'success');
+                        // Bu yerda asosiy sahifaga o'tish mumkin
+                        setTimeout(() => {
+                            showLogin();
+                        }, 1000);
+                    }, 1500);
+                } else {
+                    statusText.textContent = 'Yuz tanilmadi!';
+                    statusText.classList.remove('bg-blue-500/80');
+                    statusText.classList.add('bg-red-500/80');
+                    
+                    showNotification('Yuz tanilmadi! Qaytadan urinib ko\'ring.', 'error');
+                    
+                    setTimeout(() => {
+                        captureBtn.disabled = false;
+                        captureBtn.classList.remove('opacity-50');
+                        statusText.textContent = 'Yuzingizni oval ichiga joylashtiring';
+                        statusText.classList.remove('bg-red-500/80');
+                        statusText.classList.add('bg-black/50');
+                    }, 2000);
+                }
+            }, 2000);
+        }
+
+        // Sahifa yuklanganda
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobil qurilma emasligini tekshirish
+            if (!isMobileDevice()) {
+                const faceLoginBtn = document.getElementById('faceLoginBtn');
+                const faceRegisterBtn = document.getElementById('faceRegisterBtn');
+                
+                if (faceLoginBtn) {
+                    faceLoginBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    faceLoginBtn.title = 'Faqat Android va iOS qurilmalarda ishlaydi';
+                }
+                
+                if (faceRegisterBtn) {
+                    faceRegisterBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    faceRegisterBtn.title = 'Faqat Android va iOS qurilmalarda ishlaydi';
+                }
+            }
+            
+            showNotification('Tizim tayyor!', 'success', 2000);
+        });
+
+        // Klaviatura navigatsiyasi
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const activeForm = document.querySelector('div:not(.hidden)');
+                if (activeForm && activeForm.id === 'loginForm') {
+                    performLogin();
+                } else if (activeForm && activeForm.id === 'registerForm') {
+                    performRegister();
+                } else if (activeForm && activeForm.id === 'verificationForm') {
+                    performVerification();
+                }
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97c4344df4593536',t:'MTc1NzM5NDg5MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
