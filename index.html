@@ -272,26 +272,12 @@
                     <button onclick="showRegister()" class="text-white font-semibold hover:underline">Ro'yxatdan o'ting</button>
                 </p>
                 
-                <div class="mt-4 pt-4 border-t border-white/20 space-y-2">
+                <div class="mt-4 pt-4 border-t border-white/20">
                     <button onclick="toggleAccessibilityMode()" class="text-white/60 hover:text-white text-xs transition-colors flex items-center justify-center space-x-1 mx-auto">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         <span>Maxsus imkoniyatlar</span>
-                    </button>
-                    
-                    <button onclick="showSecuritySettings()" class="text-white/60 hover:text-white text-xs transition-colors flex items-center justify-center space-x-1 mx-auto">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                        </svg>
-                        <span>Xavfsizlik sozlamalari</span>
-                    </button>
-                    
-                    <button onclick="showSystemInfo()" class="text-white/60 hover:text-white text-xs transition-colors flex items-center justify-center space-x-1 mx-auto">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span>Tizim ma'lumotlari</span>
                     </button>
                 </div>
             </div>
@@ -334,24 +320,13 @@
                 <div>
                     <label class="block text-white/90 text-sm font-medium mb-2">Parol</label>
                     <div class="relative">
-                        <input type="password" id="registerPassword" oninput="updatePasswordStrength()" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" placeholder="••••••••">
+                        <input type="password" id="registerPassword" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" placeholder="••••••••">
                         <button type="button" onclick="togglePassword('registerPassword')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
                         </button>
-                    </div>
-                    <!-- Parol kuchliligi ko'rsatkichi -->
-                    <div class="mt-2">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-white/70 text-xs">Parol kuchliligi:</span>
-                            <span id="passwordStrengthText" class="text-xs font-medium">-</span>
-                        </div>
-                        <div class="w-full bg-white/20 rounded-full h-2">
-                            <div id="passwordStrengthBar" class="h-2 rounded-full transition-all duration-300" style="width: 0%; background-color: #ef4444;"></div>
-                        </div>
-                        <div id="passwordFeedback" class="text-xs text-white/60 mt-1 hidden"></div>
                     </div>
                 </div>
 
@@ -446,209 +421,8 @@
         let voiceAttempts = 0;
         let isAccessibilityMode = false;
         
-        // Yangi xavfsizlik o'zgaruvchilari
-        let loginAttempts = JSON.parse(localStorage.getItem('loginAttempts') || '{}');
-        let blockedUsers = JSON.parse(localStorage.getItem('blockedUsers') || '{}');
-        let sessionData = JSON.parse(localStorage.getItem('sessionData') || '{}');
-        let securityLogs = JSON.parse(localStorage.getItem('securityLogs') || '[]');
-        let twoFactorEnabled = false;
-        let currentUser = null;
-        let deviceFingerprint = generateDeviceFingerprint();
-        
-        // Yangi UI o'zgaruvchilari
-        let isDarkMode = localStorage.getItem('darkMode') === 'true';
-        let currentLanguage = localStorage.getItem('language') || 'uz';
-        let notificationSound = localStorage.getItem('notificationSound') !== 'false';
-        let autoSave = localStorage.getItem('autoSave') !== 'false';
-        
         // Ovoz effektlari
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // Qurilma identifikatori yaratish
-        function generateDeviceFingerprint() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.textBaseline = 'top';
-            ctx.font = '14px Arial';
-            ctx.fillText('Device fingerprint', 2, 2);
-            
-            const fingerprint = {
-                screen: `${screen.width}x${screen.height}`,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                language: navigator.language,
-                platform: navigator.platform,
-                userAgent: navigator.userAgent.substring(0, 100),
-                canvas: canvas.toDataURL().substring(0, 50),
-                timestamp: Date.now()
-            };
-            
-            return btoa(JSON.stringify(fingerprint)).substring(0, 32);
-        }
-        
-        // Xavfsizlik logi qo'shish
-        function addSecurityLog(action, details = {}) {
-            const log = {
-                id: Date.now(),
-                action: action,
-                timestamp: new Date().toISOString(),
-                deviceFingerprint: deviceFingerprint,
-                userAgent: navigator.userAgent.substring(0, 100),
-                ip: 'localhost', // Haqiqiy dasturda server tomonidan aniqlanadi
-                details: details
-            };
-            
-            securityLogs.unshift(log);
-            
-            // Faqat oxirgi 100 ta logni saqlash
-            if (securityLogs.length > 100) {
-                securityLogs = securityLogs.slice(0, 100);
-            }
-            
-            localStorage.setItem('securityLogs', JSON.stringify(securityLogs));
-        }
-        
-        // Kirish urinishlarini kuzatish
-        function trackLoginAttempt(identifier, success = false) {
-            const now = Date.now();
-            const key = identifier.toLowerCase();
-            
-            if (!loginAttempts[key]) {
-                loginAttempts[key] = {
-                    attempts: 0,
-                    lastAttempt: now,
-                    blocked: false,
-                    blockUntil: 0
-                };
-            }
-            
-            const userAttempts = loginAttempts[key];
-            
-            if (success) {
-                // Muvaffaqiyatli kirish - hisoblagichni tozalash
-                delete loginAttempts[key];
-                addSecurityLog('successful_login', { identifier: key });
-            } else {
-                // Muvaffaqiyatsiz kirish
-                userAttempts.attempts++;
-                userAttempts.lastAttempt = now;
-                
-                // 5 marta noto'g'ri urinishdan keyin 15 daqiqaga bloklash
-                if (userAttempts.attempts >= 5) {
-                    userAttempts.blocked = true;
-                    userAttempts.blockUntil = now + (15 * 60 * 1000); // 15 daqiqa
-                    
-                    addSecurityLog('account_blocked', { 
-                        identifier: key, 
-                        attempts: userAttempts.attempts,
-                        blockDuration: '15 minutes'
-                    });
-                } else {
-                    addSecurityLog('failed_login', { 
-                        identifier: key, 
-                        attempts: userAttempts.attempts 
-                    });
-                }
-            }
-            
-            localStorage.setItem('loginAttempts', JSON.stringify(loginAttempts));
-        }
-        
-        // Foydalanuvchi bloklanganligini tekshirish
-        function isUserBlocked(identifier) {
-            const key = identifier.toLowerCase();
-            const userAttempts = loginAttempts[key];
-            
-            if (!userAttempts || !userAttempts.blocked) {
-                return false;
-            }
-            
-            const now = Date.now();
-            if (now > userAttempts.blockUntil) {
-                // Blok muddati tugagan
-                delete loginAttempts[key];
-                localStorage.setItem('loginAttempts', JSON.stringify(loginAttempts));
-                return false;
-            }
-            
-            return true;
-        }
-        
-        // Blok qolgan vaqtini hisoblash
-        function getBlockTimeRemaining(identifier) {
-            const key = identifier.toLowerCase();
-            const userAttempts = loginAttempts[key];
-            
-            if (!userAttempts || !userAttempts.blocked) {
-                return 0;
-            }
-            
-            const now = Date.now();
-            const remaining = userAttempts.blockUntil - now;
-            
-            return Math.max(0, Math.ceil(remaining / 1000 / 60)); // Daqiqalarda
-        }
-        
-        // Parol kuchliligini tekshirish
-        function checkPasswordStrength(password) {
-            let score = 0;
-            let feedback = [];
-            
-            if (password.length >= 8) score += 1;
-            else feedback.push('Kamida 8 ta belgi');
-            
-            if (/[a-z]/.test(password)) score += 1;
-            else feedback.push('Kichik harf');
-            
-            if (/[A-Z]/.test(password)) score += 1;
-            else feedback.push('Katta harf');
-            
-            if (/[0-9]/.test(password)) score += 1;
-            else feedback.push('Raqam');
-            
-            if (/[^a-zA-Z0-9]/.test(password)) score += 1;
-            else feedback.push('Maxsus belgi');
-            
-            const strength = ['Juda zaif', 'Zaif', 'O\'rtacha', 'Kuchli', 'Juda kuchli'][score];
-            const color = ['#ef4444', '#f59e0b', '#eab308', '#22c55e', '#16a34a'][score];
-            
-            return { score, strength, color, feedback };
-        }
-        
-        // 2FA kod yaratish
-        function generate2FACode() {
-            return Math.floor(100000 + Math.random() * 900000).toString();
-        }
-        
-        // Email validatsiya (kengaytirilgan)
-        function validateEmail(email) {
-            const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-            
-            if (!emailRegex.test(email)) {
-                return { valid: false, message: 'Email formati noto\'g\'ri' };
-            }
-            
-            // Taqiqlangan domenlar
-            const blockedDomains = ['tempmail.com', '10minutemail.com', 'guerrillamail.com'];
-            const domain = email.split('@')[1];
-            
-            if (blockedDomains.includes(domain)) {
-                return { valid: false, message: 'Vaqtinchalik email manzillari taqiqlangan' };
-            }
-            
-            return { valid: true, message: 'Email to\'g\'ri' };
-        }
-        
-        // Telefon raqam validatsiya
-        function validatePhone(phone) {
-            const phoneRegex = /^\+998[0-9]{9}$/;
-            const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-            
-            if (!phoneRegex.test(cleanPhone)) {
-                return { valid: false, message: 'Telefon raqam formati: +998901234567' };
-            }
-            
-            return { valid: true, message: 'Telefon raqam to\'g\'ri', cleanPhone };
-        }
         
         function playSound(frequency, duration, type = 'success') {
             try {
@@ -772,18 +546,11 @@
         }
 
         function performLogin() {
-            const email = document.getElementById('loginEmail').value.trim();
+            const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             
             if (!email || !password) {
                 showNotification('Barcha maydonlarni to\'ldiring!', 'error');
-                return;
-            }
-            
-            // Foydalanuvchi bloklanganligini tekshirish
-            if (isUserBlocked(email)) {
-                const remainingTime = getBlockTimeRemaining(email);
-                showNotification(`Hisob ${remainingTime} daqiqaga bloklangan. Keyinroq urinib ko'ring.`, 'error');
                 return;
             }
             
@@ -793,114 +560,12 @@
             );
             
             if (user) {
-                // Muvaffaqiyatli kirish
-                trackLoginAttempt(email, true);
-                currentUser = user;
-                
-                // Session yaratish
-                const sessionId = generateSessionId();
-                sessionData[sessionId] = {
-                    userId: user.id,
-                    loginTime: new Date().toISOString(),
-                    deviceFingerprint: deviceFingerprint,
-                    lastActivity: new Date().toISOString()
-                };
-                localStorage.setItem('sessionData', JSON.stringify(sessionData));
-                localStorage.setItem('currentSession', sessionId);
-                
                 showNotification(`Xush kelibsiz, ${user.firstName}!`, 'success');
-                
-                // 2FA tekshirish
-                if (user.twoFactorEnabled) {
-                    show2FAVerification(user);
-                } else {
-                    setTimeout(() => {
-                        showSuccess(`Tizimga muvaffaqiyatli kirildi!\nXush kelibsiz, ${user.firstName} ${user.lastName}`);
-                    }, 1000);
-                }
-            } else {
-                // Muvaffaqiyatsiz kirish
-                trackLoginAttempt(email, false);
-                const attempts = loginAttempts[email.toLowerCase()]?.attempts || 0;
-                const remaining = 5 - attempts;
-                
-                if (remaining > 0) {
-                    showNotification(`Email/telefon yoki parol noto'g'ri! ${remaining} ta urinish qoldi.`, 'error');
-                } else {
-                    showNotification('Hisob 15 daqiqaga bloklandi!', 'error');
-                }
-            }
-        }
-        
-        // Session ID yaratish
-        function generateSessionId() {
-            return 'session_' + Date.now() + '_' + Math.random().toString(36).substring(2);
-        }
-        
-        // 2FA tekshirish oynasi
-        function show2FAVerification(user) {
-            const code = generate2FACode();
-            
-            // Demo maqsadida kodni konsolga chiqarish
-            console.log('2FA kod (demo):', code);
-            
-            const modal = document.createElement('div');
-            modal.className = 'fullscreen-camera';
-            modal.innerHTML = `
-                <div class="glass-effect rounded-2xl p-8 shadow-2xl max-w-md w-full mx-4">
-                    <div class="text-center mb-6">
-                        <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-white mb-2">2FA Tasdiqlash</h3>
-                        <p class="text-white/80">6 raqamli kodni kiriting</p>
-                        <p class="text-yellow-300 text-sm mt-2">Demo kod: ${code}</p>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <input type="text" id="twoFactorCode" maxlength="6" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white text-center text-2xl tracking-widest placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" placeholder="000000">
-                        
-                        <div class="flex space-x-3">
-                            <button onclick="verify2FA('${code}', '${user.id}')" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-300">
-                                Tasdiqlash
-                            </button>
-                            <button onclick="close2FAModal()" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-300">
-                                Bekor qilish
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            document.getElementById('twoFactorCode').focus();
-        }
-        
-        // 2FA tasdiqlash
-        function verify2FA(correctCode, userId) {
-            const enteredCode = document.getElementById('twoFactorCode').value;
-            
-            if (enteredCode === correctCode) {
-                close2FAModal();
-                const user = registeredUsers.find(u => u.id == userId);
-                showNotification('2FA tasdiqlandi!', 'success');
                 setTimeout(() => {
                     showSuccess(`Tizimga muvaffaqiyatli kirildi!\nXush kelibsiz, ${user.firstName} ${user.lastName}`);
                 }, 1000);
             } else {
-                showNotification('Noto\'g\'ri kod!', 'error');
-                document.getElementById('twoFactorCode').value = '';
-                document.getElementById('twoFactorCode').focus();
-            }
-        }
-        
-        // 2FA modal yopish
-        function close2FAModal() {
-            const modal = document.querySelector('.fullscreen-camera:last-child');
-            if (modal) {
-                modal.remove();
+                showNotification('Email/telefon yoki parol noto\'g\'ri!', 'error');
             }
         }
 
@@ -929,10 +594,9 @@
                 return;
             }
             
-            // Kengaytirilgan email validatsiya
-            const emailValidation = validateEmail(email);
-            if (!emailValidation.valid) {
-                showFieldError('registerEmail', emailValidation.message);
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showFieldError('registerEmail', 'Email formati noto\'g\'ri!');
                 return;
             }
             
@@ -941,22 +605,13 @@
                 return;
             }
             
-            // Telefon raqam validatsiya
-            const phoneValidation = validatePhone(phone);
-            if (!phoneValidation.valid) {
-                showFieldError('phone', phoneValidation.message);
-                return;
-            }
-            
             if (!password) {
                 showFieldError('registerPassword', 'Parol kiritilishi shart!');
                 return;
             }
             
-            // Parol kuchliligini tekshirish
-            const passwordStrength = checkPasswordStrength(password);
-            if (passwordStrength.score < 3) {
-                showFieldError('registerPassword', `Parol juda zaif! Kerak: ${passwordStrength.feedback.join(', ')}`);
+            if (password.length < 6) {
+                showFieldError('registerPassword', 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak!');
                 return;
             }
             
@@ -976,20 +631,11 @@
             }
             
             // Email/telefon takrorlanishini tekshirish
-            const existingUser = registeredUsers.find(u => 
-                u.email === email || u.phone === phoneValidation.cleanPhone
-            );
+            const existingUser = registeredUsers.find(u => u.email === email || u.phone === phone);
             if (existingUser) {
-                if (existingUser.email === email) {
-                    showFieldError('registerEmail', 'Bu email allaqachon ro\'yxatdan o\'tgan!');
-                } else {
-                    showFieldError('phone', 'Bu telefon raqam allaqachon ro\'yxatdan o\'tgan!');
-                }
+                showNotification('Bu email yoki telefon raqam allaqachon ro\'yxatdan o\'tgan!', 'error');
                 return;
             }
-            
-            // Parolni hash qilish (soddalashtirilgan)
-            const hashedPassword = btoa(password + 'salt_' + email);
             
             // Foydalanuvchini ro'yxatga qo'shish
             const newUser = {
@@ -997,475 +643,18 @@
                 firstName,
                 lastName,
                 email,
-                phone: phoneValidation.cleanPhone,
-                password: hashedPassword,
-                originalPassword: password, // Demo uchun
+                phone,
+                password,
                 registeredAt: new Date().toISOString(),
                 hasFaceData: false,
-                faceData: null,
-                hasVoiceData: false,
-                voiceData: null,
-                twoFactorEnabled: false,
-                deviceFingerprint: deviceFingerprint,
-                lastLogin: null,
-                loginCount: 0,
-                isActive: true,
-                emailVerified: false,
-                phoneVerified: false
+                faceData: null
             };
             
             registeredUsers.push(newUser);
             localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
             
-            // Xavfsizlik logi
-            addSecurityLog('user_registered', {
-                userId: newUser.id,
-                email: email,
-                phone: phoneValidation.cleanPhone
-            });
-            
             showNotification('Ma\'lumotlar saqlandi!', 'success');
-            
-            // Email tasdiqlash simulatsiyasi
-            setTimeout(() => {
-                showEmailVerification(newUser);
-            }, 1000);
-        }
-        
-        // Email tasdiqlash oynasi
-        function showEmailVerification(user) {
-            const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
-            
-            const modal = document.createElement('div');
-            modal.className = 'fullscreen-camera';
-            modal.innerHTML = `
-                <div class="glass-effect rounded-2xl p-8 shadow-2xl max-w-md w-full mx-4">
-                    <div class="text-center mb-6">
-                        <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-white mb-2">Email Tasdiqlash</h3>
-                        <p class="text-white/80 mb-2">${user.email} manziliga kod yuborildi</p>
-                        <p class="text-yellow-300 text-sm">Demo kod: ${verificationCode}</p>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <input type="text" id="emailVerificationCode" maxlength="4" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white text-center text-2xl tracking-widest placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" placeholder="0000">
-                        
-                        <div class="flex space-x-3">
-                            <button onclick="verifyEmail('${verificationCode}', '${user.id}')" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-300">
-                                Tasdiqlash
-                            </button>
-                            <button onclick="skipEmailVerification('${user.id}')" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-300">
-                                Keyinroq
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            document.getElementById('emailVerificationCode').focus();
-        }
-        
-        // Email tasdiqlash
-        function verifyEmail(correctCode, userId) {
-            const enteredCode = document.getElementById('emailVerificationCode').value;
-            
-            if (enteredCode === correctCode) {
-                // Foydalanuvchini yangilash
-                const userIndex = registeredUsers.findIndex(u => u.id == userId);
-                if (userIndex !== -1) {
-                    registeredUsers[userIndex].emailVerified = true;
-                    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-                }
-                
-                closeEmailVerificationModal();
-                showNotification('Email tasdiqlandi!', 'success');
-                showSuccess('Ro\'yxatdan o\'tish muvaffaqiyatli yakunlandi!\nEmail manzil tasdiqlandi.');
-            } else {
-                showNotification('Noto\'g\'ri kod!', 'error');
-                document.getElementById('emailVerificationCode').value = '';
-                document.getElementById('emailVerificationCode').focus();
-            }
-        }
-        
-        // Email tasdiqni o'tkazib yuborish
-        function skipEmailVerification(userId) {
-            closeEmailVerificationModal();
-            showSuccess('Ro\'yxatdan o\'tish muvaffaqiyatli yakunlandi!\nEmail tasdiqni keyinroq amalga oshirishingiz mumkin.');
-        }
-        
-        // Email tasdiqlash modal yopish
-        function closeEmailVerificationModal() {
-            const modal = document.querySelector('.fullscreen-camera:last-child');
-            if (modal) {
-                modal.remove();
-            }
-        }
-        
-        // Parol kuchliligini yangilash
-        function updatePasswordStrength() {
-            const password = document.getElementById('registerPassword').value;
-            const strengthBar = document.getElementById('passwordStrengthBar');
-            const strengthText = document.getElementById('passwordStrengthText');
-            const feedback = document.getElementById('passwordFeedback');
-            
-            if (!password) {
-                strengthBar.style.width = '0%';
-                strengthText.textContent = '-';
-                strengthText.style.color = '#ffffff';
-                feedback.classList.add('hidden');
-                return;
-            }
-            
-            const strength = checkPasswordStrength(password);
-            const percentage = (strength.score / 5) * 100;
-            
-            strengthBar.style.width = `${percentage}%`;
-            strengthBar.style.backgroundColor = strength.color;
-            strengthText.textContent = strength.strength;
-            strengthText.style.color = strength.color;
-            
-            if (strength.feedback.length > 0) {
-                feedback.textContent = `Kerak: ${strength.feedback.join(', ')}`;
-                feedback.classList.remove('hidden');
-            } else {
-                feedback.classList.add('hidden');
-            }
-        }
-        
-        // Xavfsizlik sozlamalari oynasi
-        function showSecuritySettings() {
-            const modal = document.createElement('div');
-            modal.className = 'fullscreen-camera';
-            modal.innerHTML = `
-                <div class="glass-effect rounded-2xl p-8 shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-                    <div class="text-center mb-6">
-                        <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-white mb-2">Xavfsizlik Sozlamalari</h3>
-                    </div>
-                    
-                    <div class="space-y-6">
-                        <!-- Ro'yxatdan o'tgan foydalanuvchilar -->
-                        <div class="bg-white/10 rounded-xl p-4">
-                            <h4 class="text-white font-semibold mb-3 flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                                </svg>
-                                Ro'yxatdan o'tgan foydalanuvchilar (${registeredUsers.length})
-                            </h4>
-                            <div class="space-y-2 max-h-40 overflow-y-auto">
-                                ${registeredUsers.map(user => `
-                                    <div class="bg-white/5 rounded-lg p-3 flex justify-between items-center">
-                                        <div>
-                                            <p class="text-white text-sm font-medium">${user.firstName} ${user.lastName}</p>
-                                            <p class="text-white/60 text-xs">${user.email}</p>
-                                            <div class="flex space-x-2 mt-1">
-                                                ${user.emailVerified ? '<span class="text-green-400 text-xs">✓ Email</span>' : '<span class="text-red-400 text-xs">✗ Email</span>'}
-                                                ${user.hasFaceData ? '<span class="text-green-400 text-xs">✓ Yuz</span>' : '<span class="text-gray-400 text-xs">✗ Yuz</span>'}
-                                                ${user.hasVoiceData ? '<span class="text-green-400 text-xs">✓ Ovoz</span>' : '<span class="text-gray-400 text-xs">✗ Ovoz</span>'}
-                                                ${user.twoFactorEnabled ? '<span class="text-blue-400 text-xs">✓ 2FA</span>' : '<span class="text-gray-400 text-xs">✗ 2FA</span>'}
-                                            </div>
-                                        </div>
-                                        <button onclick="toggleUser2FA('${user.id}')" class="text-xs px-2 py-1 rounded ${user.twoFactorEnabled ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white transition-colors">
-                                            ${user.twoFactorEnabled ? '2FA O\'chirish' : '2FA Yoqish'}
-                                        </button>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                        
-                        <!-- Xavfsizlik loglari -->
-                        <div class="bg-white/10 rounded-xl p-4">
-                            <h4 class="text-white font-semibold mb-3 flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                                Oxirgi xavfsizlik loglari (${securityLogs.length})
-                            </h4>
-                            <div class="space-y-2 max-h-40 overflow-y-auto">
-                                ${securityLogs.slice(0, 10).map(log => `
-                                    <div class="bg-white/5 rounded-lg p-2">
-                                        <div class="flex justify-between items-start">
-                                            <div>
-                                                <p class="text-white text-xs font-medium">${getLogActionText(log.action)}</p>
-                                                <p class="text-white/60 text-xs">${new Date(log.timestamp).toLocaleString('uz-UZ')}</p>
-                                            </div>
-                                            <span class="text-xs px-2 py-1 rounded ${getLogColor(log.action)}">${log.action}</span>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                        
-                        <!-- Bloklangan foydalanuvchilar -->
-                        <div class="bg-white/10 rounded-xl p-4">
-                            <h4 class="text-white font-semibold mb-3 flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>
-                                </svg>
-                                Bloklangan hisoblar
-                            </h4>
-                            <div class="space-y-2 max-h-32 overflow-y-auto">
-                                ${Object.entries(loginAttempts).filter(([key, data]) => data.blocked).map(([key, data]) => `
-                                    <div class="bg-red-500/20 rounded-lg p-2 flex justify-between items-center">
-                                        <div>
-                                            <p class="text-white text-xs">${key}</p>
-                                            <p class="text-red-300 text-xs">${data.attempts} ta noto'g'ri urinish</p>
-                                        </div>
-                                        <button onclick="unblockUser('${key}')" class="text-xs px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded transition-colors">
-                                            Blokni olib tashlash
-                                        </button>
-                                    </div>
-                                `).join('') || '<p class="text-white/60 text-sm text-center py-4">Bloklangan hisoblar yo\'q</p>'}
-                            </div>
-                        </div>
-                        
-                        <!-- Tizim sozlamalari -->
-                        <div class="bg-white/10 rounded-xl p-4">
-                            <h4 class="text-white font-semibold mb-3">Tizim Sozlamalari</h4>
-                            <div class="space-y-3">
-                                <button onclick="clearAllData()" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg text-sm transition-colors">
-                                    Barcha ma'lumotlarni tozalash
-                                </button>
-                                <button onclick="exportData()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-sm transition-colors">
-                                    Ma'lumotlarni eksport qilish
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button onclick="closeSecuritySettings()" class="w-full mt-6 bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-300">
-                        Yopish
-                    </button>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-        }
-        
-        // Log matnini olish
-        function getLogActionText(action) {
-            const texts = {
-                'successful_login': 'Muvaffaqiyatli kirish',
-                'failed_login': 'Muvaffaqiyatsiz kirish',
-                'account_blocked': 'Hisob bloklandi',
-                'user_registered': 'Yangi foydalanuvchi ro\'yxatdan o\'tdi',
-                'face_registered': 'Yuz ma\'lumotlari ro\'yxatga olindi',
-                'voice_registered': 'Ovoz ma\'lumotlari ro\'yxatga olindi'
-            };
-            return texts[action] || action;
-        }
-        
-        // Log rangini olish
-        function getLogColor(action) {
-            const colors = {
-                'successful_login': 'bg-green-500/20 text-green-300',
-                'failed_login': 'bg-red-500/20 text-red-300',
-                'account_blocked': 'bg-red-600/20 text-red-400',
-                'user_registered': 'bg-blue-500/20 text-blue-300',
-                'face_registered': 'bg-purple-500/20 text-purple-300',
-                'voice_registered': 'bg-orange-500/20 text-orange-300'
-            };
-            return colors[action] || 'bg-gray-500/20 text-gray-300';
-        }
-        
-        // Foydalanuvchi 2FA ni yoqish/o'chirish
-        function toggleUser2FA(userId) {
-            const userIndex = registeredUsers.findIndex(u => u.id == userId);
-            if (userIndex !== -1) {
-                registeredUsers[userIndex].twoFactorEnabled = !registeredUsers[userIndex].twoFactorEnabled;
-                localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-                
-                const action = registeredUsers[userIndex].twoFactorEnabled ? 'yoqildi' : 'o\'chirildi';
-                showNotification(`2FA ${action}!`, 'success');
-                
-                // Modal ni yangilash
-                closeSecuritySettings();
-                setTimeout(() => showSecuritySettings(), 100);
-            }
-        }
-        
-        // Foydalanuvchi blokini olib tashlash
-        function unblockUser(identifier) {
-            delete loginAttempts[identifier];
-            localStorage.setItem('loginAttempts', JSON.stringify(loginAttempts));
-            showNotification('Blok olib tashlandi!', 'success');
-            
-            // Modal ni yangilash
-            closeSecuritySettings();
-            setTimeout(() => showSecuritySettings(), 100);
-        }
-        
-        // Barcha ma'lumotlarni tozalash
-        function clearAllData() {
-            if (confirm('Barcha ma\'lumotlar o\'chiriladi! Davom etasizmi?')) {
-                localStorage.clear();
-                registeredUsers = [];
-                loginAttempts = {};
-                securityLogs = [];
-                sessionData = {};
-                
-                showNotification('Barcha ma\'lumotlar tozalandi!', 'success');
-                closeSecuritySettings();
-            }
-        }
-        
-        // Ma'lumotlarni eksport qilish
-        function exportData() {
-            const data = {
-                users: registeredUsers.map(u => ({
-                    ...u,
-                    password: '[HIDDEN]',
-                    originalPassword: '[HIDDEN]',
-                    faceData: u.faceData ? '[FACE_DATA]' : null,
-                    voiceData: u.voiceData ? '[VOICE_DATA]' : null
-                })),
-                securityLogs: securityLogs,
-                loginAttempts: loginAttempts,
-                exportDate: new Date().toISOString()
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `security_data_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            showNotification('Ma\'lumotlar eksport qilindi!', 'success');
-        }
-        
-        // Xavfsizlik sozlamalari modal yopish
-        function closeSecuritySettings() {
-            const modal = document.querySelector('.fullscreen-camera:last-child');
-            if (modal) {
-                modal.remove();
-            }
-        }
-        
-        // Tizim ma'lumotlari oynasi
-        function showSystemInfo() {
-            const modal = document.createElement('div');
-            modal.className = 'fullscreen-camera';
-            modal.innerHTML = `
-                <div class="glass-effect rounded-2xl p-8 shadow-2xl max-w-lg w-full mx-4">
-                    <div class="text-center mb-6">
-                        <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-white mb-2">Tizim Ma'lumotlari</h3>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div class="bg-white/10 rounded-xl p-4">
-                            <h4 class="text-white font-semibold mb-3">Qurilma Ma'lumotlari</h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Brauzer:</span>
-                                    <span class="text-white">${navigator.userAgent.split(' ')[0]}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Platforma:</span>
-                                    <span class="text-white">${navigator.platform}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Til:</span>
-                                    <span class="text-white">${navigator.language}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Ekran:</span>
-                                    <span class="text-white">${screen.width}x${screen.height}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Vaqt zonasi:</span>
-                                    <span class="text-white">${Intl.DateTimeFormat().resolvedOptions().timeZone}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Qurilma ID:</span>
-                                    <span class="text-white text-xs">${deviceFingerprint}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white/10 rounded-xl p-4">
-                            <h4 class="text-white font-semibold mb-3">Tizim Statistikasi</h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Foydalanuvchilar:</span>
-                                    <span class="text-white">${registeredUsers.length}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Yuz ma'lumotlari:</span>
-                                    <span class="text-white">${registeredUsers.filter(u => u.hasFaceData).length}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Ovoz ma'lumotlari:</span>
-                                    <span class="text-white">${registeredUsers.filter(u => u.hasVoiceData).length}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">2FA yoqilgan:</span>
-                                    <span class="text-white">${registeredUsers.filter(u => u.twoFactorEnabled).length}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Xavfsizlik loglari:</span>
-                                    <span class="text-white">${securityLogs.length}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Bloklangan hisoblar:</span>
-                                    <span class="text-white">${Object.keys(loginAttempts).filter(key => loginAttempts[key].blocked).length}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white/10 rounded-xl p-4">
-                            <h4 class="text-white font-semibold mb-3">Qo'llab-quvvatlash</h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Kamera:</span>
-                                    <span class="text-white">${navigator.mediaDevices ? '✓ Qo\'llab-quvvatlanadi' : '✗ Qo\'llab-quvvatlanmaydi'}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Mikrofon:</span>
-                                    <span class="text-white">${navigator.mediaDevices ? '✓ Qo\'llab-quvvatlanadi' : '✗ Qo\'llab-quvvatlanmaydi'}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">Ovoz tanish:</span>
-                                    <span class="text-white">${('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) ? '✓ Qo\'llab-quvvatlanadi' : '✗ Qo\'llab-quvvatlanmaydi'}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-white/70">LocalStorage:</span>
-                                    <span class="text-white">${localStorage ? '✓ Qo\'llab-quvvatlanadi' : '✗ Qo\'llab-quvvatlanmaydi'}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button onclick="closeSystemInfo()" class="w-full mt-6 bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-300">
-                        Yopish
-                    </button>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-        }
-        
-        // Tizim ma'lumotlari modal yopish
-        function closeSystemInfo() {
-            const modal = document.querySelector('.fullscreen-camera:last-child');
-            if (modal) {
-                modal.remove();
-            }
+            showSuccess('Ro\'yxatdan o\'tish muvaffaqiyatli yakunlandi!');
         }
 
         // Yuz ro'yxatga olish
@@ -2006,67 +1195,8 @@
                 }
             }
             
-            // Xavfsizlik logi qo'shish
-            addSecurityLog('system_started', {
-                userAgent: navigator.userAgent.substring(0, 100),
-                screen: `${screen.width}x${screen.height}`,
-                language: navigator.language
-            });
-            
-            // Eski sessionlarni tozalash (24 soatdan eski)
-            cleanOldSessions();
-            
-            // Eski login urinishlarini tozalash (7 kundan eski)
-            cleanOldLoginAttempts();
-            
-            // Xush kelibsiz xabari
-            const totalUsers = registeredUsers.length;
-            const activeUsers = registeredUsers.filter(u => u.isActive).length;
-            const blockedAccounts = Object.keys(loginAttempts).filter(key => loginAttempts[key].blocked).length;
-            
-            let welcomeMessage = 'Xavfsiz identifikatsiya tizimi tayyor!';
-            if (totalUsers > 0) {
-                welcomeMessage += ` ${totalUsers} foydalanuvchi ro'yxatdan o'tgan.`;
-            }
-            if (blockedAccounts > 0) {
-                welcomeMessage += ` ${blockedAccounts} hisob bloklangan.`;
-            }
-            
-            showNotification(welcomeMessage, 'success', 4000);
+            showNotification('Tizim tayyor! Yuz va ovoz tanish mavjud.', 'success', 3000);
         });
-        
-        // Eski sessionlarni tozalash
-        function cleanOldSessions() {
-            const now = Date.now();
-            const dayInMs = 24 * 60 * 60 * 1000; // 24 soat
-            
-            Object.keys(sessionData).forEach(sessionId => {
-                const session = sessionData[sessionId];
-                const sessionTime = new Date(session.loginTime).getTime();
-                
-                if (now - sessionTime > dayInMs) {
-                    delete sessionData[sessionId];
-                }
-            });
-            
-            localStorage.setItem('sessionData', JSON.stringify(sessionData));
-        }
-        
-        // Eski login urinishlarini tozalash
-        function cleanOldLoginAttempts() {
-            const now = Date.now();
-            const weekInMs = 7 * 24 * 60 * 60 * 1000; // 7 kun
-            
-            Object.keys(loginAttempts).forEach(key => {
-                const attempt = loginAttempts[key];
-                
-                if (now - attempt.lastAttempt > weekInMs) {
-                    delete loginAttempts[key];
-                }
-            });
-            
-            localStorage.setItem('loginAttempts', JSON.stringify(loginAttempts));
-        }
 
         // Accessibility funksiyasi
         function toggleAccessibilityMode() {
@@ -2165,5 +1295,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97c48d5661c9027d',t:'MTc1NzM5ODUzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97c482db52ea027d',t:'MTc1NzM5ODEwNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
