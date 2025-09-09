@@ -35,27 +35,38 @@
             to { opacity: 1; }
         }
         .oval-frame {
-            width: 200px;
-            height: 250px;
+            width: 300px;
+            height: 400px;
             border: 4px solid #10b981;
             border-radius: 50%;
             position: relative;
             overflow: hidden;
         }
-        .oval-frame::before {
-            content: '';
-            position: absolute;
-            top: -4px;
-            left: -4px;
-            right: -4px;
-            bottom: -4px;
-            border: 2px solid rgba(16, 185, 129, 0.3);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
+        .oval-frame.detecting {
+            border-color: #f59e0b;
+            animation: pulse 1s infinite;
+        }
+        .oval-frame.valid {
+            border-color: #10b981;
+            animation: validPulse 0.5s ease-out;
+        }
+        .oval-frame.invalid {
+            border-color: #ef4444;
+            animation: shake 0.5s ease-out;
         }
         @keyframes pulse {
             0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.7; }
+            50% { transform: scale(1.02); opacity: 0.8; }
+        }
+        @keyframes validPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
         .status-panel {
             position: fixed;
@@ -75,12 +86,74 @@
             border-color: #ef4444 !important;
             box-shadow: 0 0 0 1px #ef4444 !important;
         }
+        .fullscreen-camera {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .face-detection-info {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 300px;
+        }
+        .progress-bar {
+            width: 200px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px auto;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
     </style>
 </head>
 <body class="gradient-bg min-h-screen flex items-center justify-center p-4">
     <!-- Status Panel -->
     <div id="statusPanel" class="status-panel">
         <!-- Notifications will appear here -->
+    </div>
+
+    <!-- Fullscreen Camera Modal -->
+    <div id="fullscreenCamera" class="fullscreen-camera hidden">
+        <div class="face-detection-info">
+            <h3 class="text-lg font-semibold mb-2" id="detectionTitle">Yuz tanish</h3>
+            <p class="text-sm mb-3" id="detectionMessage">Yuzingizni oval ichiga joylashtiring</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p class="text-xs text-gray-300" id="detectionStatus">Jonli yuz kutilmoqda...</p>
+        </div>
+        
+        <div class="relative">
+            <video id="fullscreenVideo" class="rounded-2xl" width="640" height="480" autoplay muted></video>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="oval-frame" id="faceFrame"></div>
+            </div>
+        </div>
+        
+        <button onclick="closeFaceDetection()" class="mt-6 bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300">
+            Bekor qilish
+        </button>
     </div>
 
     <div class="w-full max-w-md">
@@ -138,7 +211,7 @@
                     </div>
                 </div>
 
-                <button type="button" onclick="startFaceRecognition()" id="faceLoginBtn" class="w-full mt-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-4 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
+                <button type="button" onclick="startFaceLogin()" id="faceLoginBtn" class="w-full mt-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-4 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -208,7 +281,7 @@
                         <button type="button" onclick="togglePassword('confirmPassword')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-2 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
                         </button>
                     </div>
@@ -255,174 +328,6 @@
             </div>
         </div>
 
-        <!-- Tasdiqlash oynasi -->
-        <div id="verificationForm" class="glass-effect rounded-2xl p-8 shadow-2xl slide-in hidden">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-white mb-2">Tasdiqlash</h2>
-                <p class="text-white/80">Telefon raqamingizga yuborilgan kodni kiriting</p>
-                <p class="text-white/60 text-sm mt-2" id="sentToNumber">+998 90 *** ** 67</p>
-            </div>
-
-            <form class="space-y-6">
-                <div>
-                    <label class="block text-white/90 text-sm font-medium mb-4 text-center">Tasdiqlash kodi</label>
-                    <div class="flex justify-center space-x-3">
-                        <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" oninput="moveToNext(this, 0)">
-                        <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" oninput="moveToNext(this, 1)">
-                        <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" oninput="moveToNext(this, 2)">
-                        <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" oninput="moveToNext(this, 3)">
-                        <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" oninput="moveToNext(this, 4)">
-                        <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 input-focus transition-all duration-300" oninput="moveToNext(this, 5)">
-                    </div>
-                </div>
-
-                <div class="text-center">
-                    <p class="text-white/80 text-sm mb-4">Kod kelmadimi?</p>
-                    <button type="button" onclick="resendCode()" class="text-white font-semibold hover:underline text-sm" id="resendBtn">
-                        Qayta yuborish (<span id="countdown">60</span>s)
-                    </button>
-                </div>
-
-                <button type="button" onclick="performVerification()" class="w-full bg-white text-indigo-600 py-3 px-4 rounded-xl font-semibold hover:bg-white/90 transform hover:scale-105 transition-all duration-300 shadow-lg">
-                    Tasdiqlash
-                </button>
-            </form>
-
-            <div class="mt-6 text-center">
-                <button onclick="showRegister()" class="text-white/80 hover:text-white text-sm transition-colors">← Orqaga qaytish</button>
-            </div>
-        </div>
-
-        <!-- Yuz ro'yxatga olish oynasi -->
-        <div id="faceRegistrationForm" class="glass-effect rounded-2xl p-8 shadow-2xl slide-in hidden">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-white mb-2">Yuz ro'yxatga olish</h2>
-                <p class="text-white/80">Yuzingizni ro'yxatga olish uchun kameraga qarang</p>
-            </div>
-
-            <div class="space-y-6">
-                <!-- Kamera oynasi -->
-                <div class="relative bg-black/30 rounded-2xl overflow-hidden" style="aspect-ratio: 4/3;">
-                    <video id="regVideo" class="w-full h-full object-cover hidden" autoplay muted></video>
-                    <canvas id="regCanvas" class="w-full h-full object-cover hidden"></canvas>
-                    
-                    <!-- Kamera yoqilmagan holat -->
-                    <div id="regCameraPlaceholder" class="w-full h-full flex flex-col items-center justify-center text-white/60">
-                        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        <p class="text-center">Yuzingizni ro'yxatga olish uchun kamerani yoqing</p>
-                    </div>
-
-                    <!-- Yuz ro'yxatga olish doirasi -->
-                    <div id="regFaceOverlay" class="absolute inset-0 flex items-center justify-center hidden">
-                        <div class="oval-frame opacity-80"></div>
-                    </div>
-
-                    <!-- Holat ko'rsatkichi -->
-                    <div id="regStatusIndicator" class="absolute top-4 left-4 right-4">
-                        <div class="bg-black/50 rounded-lg px-3 py-2 text-white text-sm text-center hidden" id="regStatusText">
-                            Yuzingizni doira ichiga joylashtiring
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tugmalar -->
-                <div class="space-y-3">
-                    <button type="button" onclick="toggleRegCamera()" id="regCameraBtn" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold transform hover:scale-105 transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        <span>Kamerani yoqish</span>
-                    </button>
-
-                    <button type="button" onclick="captureAndRegister()" id="regCaptureBtn" class="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-3 px-4 rounded-xl font-semibold hover:from-green-600 hover:to-teal-600 transform hover:scale-105 transition-all duration-300 shadow-lg hidden flex items-center justify-center space-x-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        <span>Yuzni ro'yxatga olish</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="mt-6 text-center">
-                <button onclick="showRegister()" class="text-white/80 hover:text-white text-sm transition-colors">← Orqaga qaytish</button>
-            </div>
-        </div>
-
-        <!-- Yuz tanish oynasi -->
-        <div id="faceRecognitionForm" class="glass-effect rounded-2xl p-8 shadow-2xl slide-in hidden">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-white mb-2">Yuz tanish</h2>
-                <p class="text-white/80">Ro'yxatdan o'tgan yuzingizni tanish uchun kameraga qarang</p>
-            </div>
-
-            <div class="space-y-6">
-                <!-- Kamera oynasi -->
-                <div class="relative bg-black/30 rounded-2xl overflow-hidden" style="aspect-ratio: 4/3;">
-                    <video id="faceVideo" class="w-full h-full object-cover hidden" autoplay muted></video>
-                    <canvas id="faceCanvas" class="w-full h-full object-cover hidden"></canvas>
-                    
-                    <!-- Kamera yoqilmagan holat -->
-                    <div id="cameraPlaceholder" class="w-full h-full flex flex-col items-center justify-center text-white/60">
-                        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        <p class="text-center">Kamerani yoqish uchun tugmani bosing</p>
-                    </div>
-
-                    <!-- Yuz tanish doirasi -->
-                    <div id="faceOverlay" class="absolute inset-0 flex items-center justify-center hidden">
-                        <div class="oval-frame opacity-80"></div>
-                    </div>
-
-                    <!-- Holat ko'rsatkichi -->
-                    <div id="statusIndicator" class="absolute top-4 left-4 right-4">
-                        <div class="bg-black/50 rounded-lg px-3 py-2 text-white text-sm text-center hidden" id="statusText">
-                            Yuzingizni doira ichiga joylashtiring
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tugmalar -->
-                <div class="space-y-3">
-                    <button type="button" onclick="toggleCamera()" id="cameraBtn" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold transform hover:scale-105 transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        <span>Kamerani yoqish</span>
-                    </button>
-
-                    <button type="button" onclick="captureAndRecognize()" id="captureBtn" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-4 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg hidden flex items-center justify-center space-x-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span>Yuzni tanish</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="mt-6 text-center">
-                <button onclick="showLogin()" class="text-white/80 hover:text-white text-sm transition-colors">← Orqaga qaytish</button>
-            </div>
-        </div>
-
         <!-- Muvaffaqiyat oynasi -->
         <div id="successForm" class="glass-effect rounded-2xl p-8 shadow-2xl slide-in hidden">
             <div class="text-center">
@@ -432,7 +337,7 @@
                     </svg>
                 </div>
                 <h2 class="text-2xl font-bold text-white mb-4">Muvaffaqiyatli!</h2>
-                <p class="text-white/80 mb-8">Hisobingiz muvaffaqiyatli yaratildi va tasdiqlandi</p>
+                <p class="text-white/80 mb-8" id="successMessage">Hisobingiz muvaffaqiyatli yaratildi</p>
                 
                 <button onclick="showLogin()" class="w-full bg-white text-indigo-600 py-3 px-4 rounded-xl font-semibold hover:bg-white/90 transform hover:scale-105 transition-all duration-300 shadow-lg">
                     Hisobga kirish
@@ -442,39 +347,42 @@
     </div>
 
     <script>
-        let countdownTimer;
-        let countdownSeconds = 60;
-        let cameraStream = null;
-        let isCameraActive = false;
-        let regCameraStream = null;
-        let isRegCameraActive = false;
-        let registeredUsers = []; // Ro'yxatdan o'tgan foydalanuvchilar
+        let registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        let currentStream = null;
+        let faceDetectionInterval = null;
+        let detectionProgress = 0;
+        let isProcessing = false;
+        let currentMode = 'register'; // 'register' or 'login'
         
         // Ovoz effektlari
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
         function playSound(frequency, duration, type = 'success') {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            if (type === 'success') {
-                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
-            } else if (type === 'error') {
-                oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-                oscillator.frequency.setValueAtTime(300, audioContext.currentTime + 0.1);
-            } else {
-                oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                if (type === 'success') {
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+                } else if (type === 'error') {
+                    oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(300, audioContext.currentTime + 0.1);
+                } else {
+                    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+                }
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                console.log('Audio not supported');
             }
-            
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + duration);
         }
         
         // Qurilma tekshirish
@@ -548,45 +456,21 @@
             document.getElementById('registerForm').classList.add('fade-in');
         }
 
-        function showVerification() {
+        function showSuccess(message = 'Hisobingiz muvaffaqiyatli yaratildi') {
             hideAllForms();
-            document.getElementById('verificationForm').classList.remove('hidden');
-            document.getElementById('verificationForm').classList.add('fade-in');
-            startCountdown();
-        }
-
-        function showFaceRegistration() {
-            hideAllForms();
-            document.getElementById('faceRegistrationForm').classList.remove('hidden');
-            document.getElementById('faceRegistrationForm').classList.add('fade-in');
-        }
-
-        function showFaceRecognition() {
-            hideAllForms();
-            document.getElementById('faceRecognitionForm').classList.remove('hidden');
-            document.getElementById('faceRecognitionForm').classList.add('fade-in');
-        }
-
-        function showSuccess() {
-            hideAllForms();
+            document.getElementById('successMessage').textContent = message;
             document.getElementById('successForm').classList.remove('hidden');
             document.getElementById('successForm').classList.add('fade-in');
         }
 
         function hideAllForms() {
-            const forms = ['loginForm', 'registerForm', 'verificationForm', 'faceRegistrationForm', 'faceRecognitionForm', 'successForm'];
+            const forms = ['loginForm', 'registerForm', 'successForm'];
             forms.forEach(formId => {
                 document.getElementById(formId).classList.add('hidden');
                 document.getElementById(formId).classList.remove('fade-in');
             });
             
-            // Kameralarni o'chirish
-            if (cameraStream) {
-                stopCamera();
-            }
-            if (regCameraStream) {
-                stopRegCamera();
-            }
+            closeFaceDetection();
         }
 
         function togglePassword(inputId) {
@@ -599,12 +483,23 @@
             const password = document.getElementById('loginPassword').value;
             
             if (!email || !password) {
-                alert('Iltimos, barcha maydonlarni to\'ldiring');
+                showNotification('Barcha maydonlarni to\'ldiring!', 'error');
                 return;
             }
             
-            // Demo maqsadida muvaffaqiyatli kirish
-            alert('Muvaffaqiyatli kirildi!');
+            // Foydalanuvchini tekshirish
+            const user = registeredUsers.find(u => 
+                (u.email === email || u.phone === email) && u.password === password
+            );
+            
+            if (user) {
+                showNotification(`Xush kelibsiz, ${user.firstName}!`, 'success');
+                setTimeout(() => {
+                    showSuccess(`Tizimga muvaffaqiyatli kirildi!\nXush kelibsiz, ${user.firstName} ${user.lastName}`);
+                }, 1000);
+            } else {
+                showNotification('Email/telefon yoki parol noto\'g\'ri!', 'error');
+            }
         }
 
         function performRegister() {
@@ -616,7 +511,7 @@
             const confirmPassword = document.getElementById('confirmPassword').value;
             const terms = document.getElementById('terms').checked;
             
-            // Har bir maydonni tekshirish
+            // Validatsiya
             if (!firstName) {
                 showFieldError('firstName', 'Ism kiritilishi shart!');
                 return;
@@ -632,7 +527,6 @@
                 return;
             }
             
-            // Email formatini tekshirish
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 showFieldError('registerEmail', 'Email formati noto\'g\'ri!');
@@ -641,13 +535,6 @@
             
             if (!phone) {
                 showFieldError('phone', 'Telefon raqam kiritilishi shart!');
-                return;
-            }
-            
-            // Telefon raqam formatini tekshirish
-            const phoneRegex = /^\+998\s\d{2}\s\d{3}\s\d{2}\s\d{2}$/;
-            if (!phoneRegex.test(phone)) {
-                showFieldError('phone', 'Telefon raqam formati: +998 90 123 45 67');
                 return;
             }
             
@@ -676,6 +563,13 @@
                 return;
             }
             
+            // Email/telefon takrorlanishini tekshirish
+            const existingUser = registeredUsers.find(u => u.email === email || u.phone === phone);
+            if (existingUser) {
+                showNotification('Bu email yoki telefon raqam allaqachon ro\'yxatdan o\'tgan!', 'error');
+                return;
+            }
+            
             // Foydalanuvchini ro'yxatga qo'shish
             const newUser = {
                 id: Date.now(),
@@ -685,86 +579,30 @@
                 phone,
                 password,
                 registeredAt: new Date().toISOString(),
-                hasFaceData: false
+                hasFaceData: false,
+                faceData: null
             };
             
             registeredUsers.push(newUser);
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+            
             showNotification('Ma\'lumotlar saqlandi!', 'success');
-            
-            // Telefon raqamini ko'rsatish
-            const maskedPhone = phone.replace(/(\+998\s\d{2})\s\d{3}\s\d{2}\s(\d{2})/, '$1 *** ** $2');
-            document.getElementById('sentToNumber').textContent = maskedPhone;
-            
-            showVerification();
+            showSuccess('Ro\'yxatdan o\'tish muvaffaqiyatli yakunlandi!');
         }
 
-        function moveToNext(current, index) {
-            if (current.value.length === 1 && index < 5) {
-                const inputs = document.querySelectorAll('#verificationForm input[type="text"]');
-                inputs[index + 1].focus();
-            }
-            
-            // Avtomatik tasdiqlash (barcha maydonlar to'ldirilganda)
-            const inputs = document.querySelectorAll('#verificationForm input[type="text"]');
-            const allFilled = Array.from(inputs).every(input => input.value.length === 1);
-            if (allFilled) {
-                setTimeout(() => {
-                    performVerification();
-                }, 500);
-            }
-        }
-
-        function performVerification() {
-            const inputs = document.querySelectorAll('#verificationForm input[type="text"]');
-            const code = Array.from(inputs).map(input => input.value).join('');
-            
-            if (code.length !== 6) {
-                alert('Iltimos, 6 xonali kodni to\'liq kiriting');
-                return;
-            }
-            
-            // Demo maqsadida har qanday kod qabul qilinadi
-            showSuccess();
-        }
-
-        function startCountdown() {
-            countdownSeconds = 60;
-            const countdownElement = document.getElementById('countdown');
-            const resendBtn = document.getElementById('resendBtn');
-            
-            resendBtn.style.pointerEvents = 'none';
-            resendBtn.style.opacity = '0.6';
-            
-            countdownTimer = setInterval(() => {
-                countdownSeconds--;
-                countdownElement.textContent = countdownSeconds;
-                
-                if (countdownSeconds <= 0) {
-                    clearInterval(countdownTimer);
-                    resendBtn.innerHTML = 'Qayta yuborish';
-                    resendBtn.style.pointerEvents = 'auto';
-                    resendBtn.style.opacity = '1';
-                }
-            }, 1000);
-        }
-
-        function resendCode() {
-            if (countdownSeconds <= 0) {
-                alert('Tasdiqlash kodi qayta yuborildi');
-                startCountdown();
-            }
-        }
-
-        // Yuz ro'yxatga olish funksiyalari
+        // Yuz ro'yxatga olish
         function startFaceRegistration() {
             if (!isMobileDevice()) {
                 showNotification('Yuz tanish faqat Android va iOS qurilmalarda ishlaydi!', 'error');
                 return;
             }
-            showFaceRegistration();
+            
+            currentMode = 'register';
+            openFaceDetection('Yuz ro\'yxatga olish', 'Yuzingizni oval ichiga joylashtiring va harakatsiz turing');
         }
 
-        function startFaceRecognition() {
+        // Yuz orqali kirish
+        function startFaceLogin() {
             if (!isMobileDevice()) {
                 showNotification('Yuz tanish faqat Android va iOS qurilmalarda ishlaydi!', 'error');
                 return;
@@ -773,312 +611,252 @@
             // Ro'yxatdan o'tgan foydalanuvchilar borligini tekshirish
             const usersWithFace = registeredUsers.filter(user => user.hasFaceData);
             if (usersWithFace.length === 0) {
-                showNotification('Avval yuz orqali ro\'yxatdan o\'ting!', 'warning');
+                showNotification('Hech kim yuz orqali ro\'yxatdan o\'tmagan! Avval yuz orqali ro\'yxatdan o\'ting.', 'warning');
                 return;
             }
-            showFaceRecognition();
+            
+            currentMode = 'login';
+            openFaceDetection('Yuz orqali kirish', 'Ro\'yxatdan o\'tgan yuzingizni tanish uchun oval ichiga qarang');
         }
 
-        async function toggleCamera() {
-            if (!isCameraActive) {
-                try {
-                    showNotification('Kamera yoqilmoqda...', 'info');
-                    
-                    const statusText = document.getElementById('statusText');
-                    statusText.classList.remove('hidden');
-                    statusText.textContent = 'Kamera yoqilmoqda...';
-                    statusText.classList.add('bg-blue-500/80');
-                    
-                    cameraStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { 
-                            width: { ideal: 640 }, 
-                            height: { ideal: 480 },
-                            facingMode: 'user'
-                        } 
-                    });
-                    
-                    const video = document.getElementById('faceVideo');
-                    video.srcObject = cameraStream;
-                    
-                    // Video yuklashini kutish
-                    video.onloadedmetadata = () => {
-                        video.play();
-                        
-                        // UI o'zgarishlari
-                        document.getElementById('cameraPlaceholder').classList.add('hidden');
-                        document.getElementById('faceVideo').classList.remove('hidden');
-                        document.getElementById('faceOverlay').classList.remove('hidden');
-                        document.getElementById('captureBtn').classList.remove('hidden');
-                        
-                        statusText.textContent = 'Yuzingizni oval ichiga joylashtiring';
-                        statusText.classList.remove('bg-blue-500/80');
-                        statusText.classList.add('bg-black/50');
-                        
-                        const cameraBtn = document.getElementById('cameraBtn');
-                        cameraBtn.innerHTML = `
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18 21l-4.95-4.95m0 0L5.636 5.636M13.05 16.05L5.636 5.636"></path>
-                            </svg>
-                            <span>Kamerani o'chirish</span>
-                        `;
-                        cameraBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                        cameraBtn.classList.add('bg-red-500', 'hover:bg-red-600');
-                        
-                        isCameraActive = true;
-                        showNotification('Kamera muvaffaqiyatli yoqildi!', 'success');
-                    };
-                    
-                } catch (error) {
-                    console.error('Kamera xatosi:', error);
-                    const statusText = document.getElementById('statusText');
-                    statusText.classList.remove('hidden');
-                    statusText.textContent = 'Kameraga kirish rad etildi';
-                    statusText.classList.add('bg-red-500/80');
-                    
-                    setTimeout(() => {
-                        statusText.classList.add('hidden');
-                        statusText.classList.remove('bg-red-500/80');
-                    }, 3000);
-                    
-                    showNotification('Kameraga kirish rad etildi!', 'error');
-                }
-            } else {
-                stopCamera();
+        async function openFaceDetection(title, message) {
+            try {
+                document.getElementById('detectionTitle').textContent = title;
+                document.getElementById('detectionMessage').textContent = message;
+                document.getElementById('fullscreenCamera').classList.remove('hidden');
+                
+                showNotification('Kamera yoqilmoqda...', 'info');
+                
+                currentStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1280 }, 
+                        height: { ideal: 720 },
+                        facingMode: 'user'
+                    } 
+                });
+                
+                const video = document.getElementById('fullscreenVideo');
+                video.srcObject = currentStream;
+                
+                video.onloadedmetadata = () => {
+                    video.play();
+                    showNotification('Kamera yoqildi! Yuzingizni oval ichiga joylashtiring.', 'success');
+                    startFaceDetection();
+                };
+                
+            } catch (error) {
+                console.error('Kamera xatosi:', error);
+                showNotification('Kameraga kirish rad etildi!', 'error');
+                closeFaceDetection();
             }
         }
 
-        function stopCamera() {
-            if (cameraStream) {
-                cameraStream.getTracks().forEach(track => track.stop());
-                cameraStream = null;
+        function closeFaceDetection() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
             }
             
-            // UI qaytarish
-            document.getElementById('cameraPlaceholder').classList.remove('hidden');
-            document.getElementById('faceVideo').classList.add('hidden');
-            document.getElementById('faceOverlay').classList.add('hidden');
-            document.getElementById('statusText').classList.add('hidden');
-            document.getElementById('captureBtn').classList.add('hidden');
-            
-            const cameraBtn = document.getElementById('cameraBtn');
-            cameraBtn.innerHTML = `
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                </svg>
-                <span>Kamerani yoqish</span>
-            `;
-            cameraBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
-            cameraBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
-            
-            isCameraActive = false;
-        }
-
-        async function toggleRegCamera() {
-            if (!isRegCameraActive) {
-                try {
-                    // Kamera ruxsatini so'rash
-                    const statusText = document.getElementById('regStatusText');
-                    statusText.classList.remove('hidden');
-                    statusText.textContent = 'Kamera yoqilmoqda...';
-                    statusText.classList.add('bg-blue-500/80');
-                    
-                    regCameraStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { 
-                            width: { ideal: 640 }, 
-                            height: { ideal: 480 },
-                            facingMode: 'user'
-                        } 
-                    });
-                    
-                    const video = document.getElementById('regVideo');
-                    video.srcObject = regCameraStream;
-                    
-                    // Video yuklashini kutish
-                    video.onloadedmetadata = () => {
-                        video.play();
-                        
-                        // UI o'zgarishlari
-                        document.getElementById('regCameraPlaceholder').classList.add('hidden');
-                        document.getElementById('regVideo').classList.remove('hidden');
-                        document.getElementById('regFaceOverlay').classList.remove('hidden');
-                        document.getElementById('regCaptureBtn').classList.remove('hidden');
-                        
-                        statusText.textContent = 'Yuzingizni doira ichiga joylashtiring';
-                        statusText.classList.remove('bg-blue-500/80');
-                        statusText.classList.add('bg-black/50');
-                        
-                        const cameraBtn = document.getElementById('regCameraBtn');
-                        cameraBtn.innerHTML = `
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18 21l-4.95-4.95m0 0L5.636 5.636M13.05 16.05L5.636 5.636"></path>
-                            </svg>
-                            <span>Kamerani o'chirish</span>
-                        `;
-                        cameraBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                        cameraBtn.classList.add('bg-red-500', 'hover:bg-red-600');
-                        
-                        isRegCameraActive = true;
-                    };
-                    
-                } catch (error) {
-                    console.error('Kamera xatosi:', error);
-                    const statusText = document.getElementById('regStatusText');
-                    statusText.classList.remove('hidden');
-                    statusText.textContent = 'Kameraga kirish rad etildi yoki mavjud emas';
-                    statusText.classList.add('bg-red-500/80');
-                    
-                    setTimeout(() => {
-                        statusText.classList.add('hidden');
-                        statusText.classList.remove('bg-red-500/80');
-                    }, 3000);
-                    
-                    alert('Kameraga kirish imkoni yo\'q. Iltimos:\n1. Brauzer sozlamalarida kamera ruxsatini yoqing\n2. Kamera boshqa dastur tomonidan ishlatilmayotganini tekshiring\n3. HTTPS orqali kirganingizni tekshiring');
-                }
-            } else {
-                stopRegCamera();
-            }
-        }
-
-        function stopRegCamera() {
-            if (regCameraStream) {
-                regCameraStream.getTracks().forEach(track => track.stop());
-                regCameraStream = null;
+            if (faceDetectionInterval) {
+                clearInterval(faceDetectionInterval);
+                faceDetectionInterval = null;
             }
             
-            // UI qaytarish
-            document.getElementById('regCameraPlaceholder').classList.remove('hidden');
-            document.getElementById('regVideo').classList.add('hidden');
-            document.getElementById('regFaceOverlay').classList.add('hidden');
-            document.getElementById('regStatusText').classList.add('hidden');
-            document.getElementById('regCaptureBtn').classList.add('hidden');
+            document.getElementById('fullscreenCamera').classList.add('hidden');
+            detectionProgress = 0;
+            isProcessing = false;
             
-            const cameraBtn = document.getElementById('regCameraBtn');
-            cameraBtn.innerHTML = `
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                </svg>
-                <span>Kamerani yoqish</span>
-            `;
-            cameraBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
-            cameraBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
-            
-            isRegCameraActive = false;
+            // Progress bar reset
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('faceFrame').className = 'oval-frame';
         }
 
-        function captureAndRegister() {
-            const video = document.getElementById('regVideo');
-            const canvas = document.getElementById('regCanvas');
+        function startFaceDetection() {
+            const video = document.getElementById('fullscreenVideo');
+            const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
+            const faceFrame = document.getElementById('faceFrame');
+            const statusElement = document.getElementById('detectionStatus');
+            const progressFill = document.getElementById('progressFill');
             
-            // Canvas o'lchamini video bilan moslashtirish
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             
-            // Rasmni olish
-            ctx.drawImage(video, 0, 0);
-            
-            // Yuz ro'yxatga olish simulatsiyasi
-            const statusText = document.getElementById('regStatusText');
-            const captureBtn = document.getElementById('regCaptureBtn');
-            
-            statusText.textContent = 'Yuz ro\'yxatga olinmoqda...';
-            statusText.classList.remove('bg-black/50');
-            statusText.classList.add('bg-green-500/80');
-            
-            captureBtn.disabled = true;
-            captureBtn.classList.add('opacity-50');
-            
-            showNotification('Yuz ma\'lumotlari qayta ishlanmoqda...', 'info');
-            
-            // 2 soniya kutish (haqiqiy yuz ro'yxatga olish simulatsiyasi)
-            setTimeout(() => {
-                // Yuzni ro'yxatga qo'shish
-                const faceData = canvas.toDataURL(); // Base64 formatda yuz ma'lumoti
+            faceDetectionInterval = setInterval(() => {
+                if (isProcessing) return;
                 
-                // Oxirgi ro'yxatdan o'tgan foydalanuvchini topish va yuz ma'lumotlarini qo'shish
-                if (registeredUsers.length > 0) {
-                    const lastUser = registeredUsers[registeredUsers.length - 1];
-                    lastUser.faceData = faceData;
-                    lastUser.hasFaceData = true;
+                // Jonli yuz tekshirish simulatsiyasi
+                ctx.drawImage(video, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Yuz mavjudligini tekshirish (soddalashtirilgan)
+                const brightness = calculateBrightness(imageData);
+                const hasMovement = detectMovement(imageData);
+                const faceInFrame = detectFaceInFrame(imageData);
+                
+                if (brightness < 50) {
+                    // Juda qorong'u
+                    faceFrame.className = 'oval-frame invalid';
+                    statusElement.textContent = 'Yoritish yetarli emas, yorug\'roq joyga o\'ting';
+                    resetProgress();
+                } else if (!faceInFrame) {
+                    // Yuz topilmadi
+                    faceFrame.className = 'oval-frame invalid';
+                    statusElement.textContent = 'Yuz aniqlanmadi, oval ichiga qarang';
+                    resetProgress();
+                } else if (!hasMovement) {
+                    // Harakatsiz (rasm bo'lishi mumkin)
+                    faceFrame.className = 'oval-frame invalid';
+                    statusElement.textContent = 'Jonli yuz aniqlanmadi, ko\'z qirping yoki bosh harakati qiling';
+                    resetProgress();
+                } else {
+                    // Barcha shartlar bajarildi
+                    faceFrame.className = 'oval-frame detecting';
+                    statusElement.textContent = 'Jonli yuz aniqlandi, tekshirilmoqda...';
+                    
+                    detectionProgress += 10;
+                    progressFill.style.width = `${Math.min(detectionProgress, 100)}%`;
+                    
+                    if (detectionProgress >= 100) {
+                        // 3 soniya to'ldi
+                        faceFrame.className = 'oval-frame valid';
+                        statusElement.textContent = 'Muvaffaqiyatli! Qayta ishlanmoqda...';
+                        isProcessing = true;
+                        
+                        setTimeout(() => {
+                            processFaceData(canvas);
+                        }, 500);
+                    }
                 }
-                
-                statusText.textContent = 'Yuz muvaffaqiyatli ro\'yxatga olindi!';
-                statusText.classList.remove('bg-green-500/80');
-                statusText.classList.add('bg-blue-500/80');
-                
-                showNotification('Yuz muvaffaqiyatli ro\'yxatga olindi!', 'success');
+            }, 300); // Har 300ms da tekshirish
+        }
+
+        function calculateBrightness(imageData) {
+            let totalBrightness = 0;
+            const data = imageData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                totalBrightness += (r + g + b) / 3;
+            }
+            
+            return totalBrightness / (data.length / 4);
+        }
+
+        let previousImageData = null;
+        function detectMovement(imageData) {
+            if (!previousImageData) {
+                previousImageData = imageData;
+                return false;
+            }
+            
+            let diff = 0;
+            const data = imageData.data;
+            const prevData = previousImageData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const currentPixel = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                const prevPixel = (prevData[i] + prevData[i + 1] + prevData[i + 2]) / 3;
+                diff += Math.abs(currentPixel - prevPixel);
+            }
+            
+            previousImageData = imageData;
+            return diff > 1000; // Harakat chegarasi
+        }
+
+        function detectFaceInFrame(imageData) {
+            // Soddalashtirilgan yuz aniqlash
+            // Haqiqiy dasturda face-api.js yoki boshqa kutubxona ishlatiladi
+            const data = imageData.data;
+            const width = imageData.width;
+            const height = imageData.height;
+            
+            // Markaziy qismda yuz rangidagi piksellarni qidirish
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) / 6;
+            
+            let skinPixels = 0;
+            let totalPixels = 0;
+            
+            for (let y = centerY - radius; y < centerY + radius; y++) {
+                for (let x = centerX - radius; x < centerX + radius; x++) {
+                    if (x >= 0 && x < width && y >= 0 && y < height) {
+                        const index = (y * width + x) * 4;
+                        const r = data[index];
+                        const g = data[index + 1];
+                        const b = data[index + 2];
+                        
+                        // Teri rangini aniqlash (soddalashtirilgan)
+                        if (r > 95 && g > 40 && b > 20 && 
+                            Math.max(r, g, b) - Math.min(r, g, b) > 15 &&
+                            Math.abs(r - g) > 15 && r > g && r > b) {
+                            skinPixels++;
+                        }
+                        totalPixels++;
+                    }
+                }
+            }
+            
+            return (skinPixels / totalPixels) > 0.3; // 30% dan ko'p teri rangi
+        }
+
+        function resetProgress() {
+            detectionProgress = Math.max(0, detectionProgress - 5);
+            document.getElementById('progressFill').style.width = `${detectionProgress}%`;
+        }
+
+        function processFaceData(canvas) {
+            const faceData = canvas.toDataURL();
+            
+            if (currentMode === 'register') {
+                // Ro'yxatga olish
+                showNotification('Yuz ma\'lumotlari saqlanmoqda...', 'info');
                 
                 setTimeout(() => {
-                    stopRegCamera();
-                    showLogin();
-                }, 1500);
-            }, 2000);
-        }
-
-        function captureAndRecognize() {
-            const video = document.getElementById('faceVideo');
-            const canvas = document.getElementById('faceCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Canvas o'lchamini video bilan moslashtirish
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            
-            // Rasmni olish
-            ctx.drawImage(video, 0, 0);
-            
-            // Yuz tanish simulatsiyasi
-            const statusText = document.getElementById('statusText');
-            const captureBtn = document.getElementById('captureBtn');
-            
-            statusText.textContent = 'Yuz tanilmoqda...';
-            statusText.classList.remove('bg-black/50');
-            statusText.classList.add('bg-blue-500/80');
-            
-            captureBtn.disabled = true;
-            captureBtn.classList.add('opacity-50');
-            
-            showNotification('Yuz tanish jarayoni boshlandi...', 'info');
-            
-            // 2 soniya kutish (haqiqiy yuz tanish simulatsiyasi)
-            setTimeout(() => {
-                // Ro'yxatdan o'tgan yuzlar bilan solishtirish
-                const usersWithFace = registeredUsers.filter(user => user.hasFaceData);
+                    // Yangi foydalanuvchi yaratish
+                    const newUser = {
+                        id: Date.now(),
+                        firstName: 'Yuz orqali',
+                        lastName: 'Ro\'yxatdan o\'tgan',
+                        email: `face_user_${Date.now()}@system.local`,
+                        phone: `+998${Math.floor(Math.random() * 1000000000)}`,
+                        password: 'face_auth_' + Date.now(),
+                        registeredAt: new Date().toISOString(),
+                        hasFaceData: true,
+                        faceData: faceData
+                    };
+                    
+                    registeredUsers.push(newUser);
+                    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+                    
+                    closeFaceDetection();
+                    showNotification('Yuz orqali ro\'yxatdan o\'tish muvaffaqiyatli!', 'success');
+                    showSuccess('Yuz orqali ro\'yxatdan o\'tish muvaffaqiyatli yakunlandi!');
+                }, 1000);
                 
-                if (usersWithFace.length > 0) {
-                    // Demo maqsadida har doim muvaffaqiyatli (haqiqiy dasturda yuzlarni solishtirish kerak)
-                    const recognizedUser = usersWithFace[0]; // Birinchi foydalanuvchini tanish
+            } else {
+                // Kirish
+                showNotification('Yuz tanilmoqda...', 'info');
+                
+                setTimeout(() => {
+                    // Yuzni solishtirish (demo maqsadida har doim muvaffaqiyatli)
+                    const usersWithFace = registeredUsers.filter(user => user.hasFaceData);
                     
-                    statusText.textContent = 'Yuz muvaffaqiyatli tanildi!';
-                    statusText.classList.remove('bg-blue-500/80');
-                    statusText.classList.add('bg-green-500/80');
-                    
-                    showNotification(`Xush kelibsiz, ${recognizedUser.firstName}!`, 'success');
-                    
-                    setTimeout(() => {
-                        stopCamera();
-                        showNotification('Tizimga muvaffaqiyatli kirildi!', 'success');
-                        // Bu yerda asosiy sahifaga o'tish mumkin
-                        setTimeout(() => {
-                            showLogin();
-                        }, 1000);
-                    }, 1500);
-                } else {
-                    statusText.textContent = 'Yuz tanilmadi!';
-                    statusText.classList.remove('bg-blue-500/80');
-                    statusText.classList.add('bg-red-500/80');
-                    
-                    showNotification('Yuz tanilmadi! Qaytadan urinib ko\'ring.', 'error');
-                    
-                    setTimeout(() => {
-                        captureBtn.disabled = false;
-                        captureBtn.classList.remove('opacity-50');
-                        statusText.textContent = 'Yuzingizni oval ichiga joylashtiring';
-                        statusText.classList.remove('bg-red-500/80');
-                        statusText.classList.add('bg-black/50');
-                    }, 2000);
-                }
-            }, 2000);
+                    if (usersWithFace.length > 0) {
+                        const recognizedUser = usersWithFace[0]; // Birinchi foydalanuvchini tanish
+                        
+                        closeFaceDetection();
+                        showNotification(`Xush kelibsiz, ${recognizedUser.firstName}!`, 'success');
+                        showSuccess(`Yuz orqali tizimga muvaffaqiyatli kirildi!\nXush kelibsiz, ${recognizedUser.firstName} ${recognizedUser.lastName}`);
+                    } else {
+                        closeFaceDetection();
+                        showNotification('Yuz tanilmadi!', 'error');
+                    }
+                }, 1000);
+            }
         }
 
         // Sahifa yuklanganda
@@ -1110,11 +888,13 @@
                     performLogin();
                 } else if (activeForm && activeForm.id === 'registerForm') {
                     performRegister();
-                } else if (activeForm && activeForm.id === 'verificationForm') {
-                    performVerification();
                 }
+            }
+            
+            if (e.key === 'Escape') {
+                closeFaceDetection();
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97c4344df4593536',t:'MTc1NzM5NDg5MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97c46e8654433536',t:'MTc1NzM5NzI3NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
